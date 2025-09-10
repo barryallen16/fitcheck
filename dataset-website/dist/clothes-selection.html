@@ -39,7 +39,9 @@
 
     <!-- TOP bar with toggle -->
     <div class="flex justify-between mb-4 items-center bg-black/40 px-2 py-2 rounded-xl">
-      <img src="op-logo.png" class="w-16 sm:w-20" alt="Brand Logo">
+      <a href="https://www.instagram.com/ordinarypeople.team/">
+        <img src="op-logo.png" class="w-16 sm:w-20" alt="Brand Logo">
+      </a>
       <div id="gender-control" role="radiogroup" aria-label="Gender"
            class="bg-white/50 backdrop-blur-md border border-white/40 px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
         <button id="gender-male" role="radio" aria-checked="false"
@@ -98,17 +100,21 @@
 
 <script>
   const men = {
-    top: { black: "men-shirts/black.png", brown: "men-shirts/brown.png", white: "men-shirts/white.png" },
-    bottom: { black: "men-jeans/black.png", "dark-blue": "men-jeans/dark-blue.png" }
+    top: { black: "men-shirts/black.jpg", brown: "men-shirts/brown.jpg", white: "men-shirts/white.jpg",
+green:"men-shirts/green.jpg",grey:"men-shirts/grey.jpg", "light-blue":"men-shirts/light-blue.jpg", maroon:"men-shirts/maroon.jpg",
+mustard:"men-shirts/mustard.jpg","navy-blue":"men-shirts/navy-blue.jpg",pink:"men-shirts/pink.jpg"
+
+     },
+    bottom: { black: "men-jeans/black.jpg", "dark-blue": "men-jeans/dark-blue.jpg" ,"light-blue": "men-jeans/light-blue.jpg"}
   };
 
   const women = {
     top: {
-      black: "women-kurthi/black.png", "light-blue": "women-kurthi/light-blue.png",
-      "navy-blue": "women-kurthi/navy-blue.png", "olive-green": "women-kurthi/olive-green.png",
-      pink: "women-kurthi/pink.png", purple: "women-kurthi/purple.png", white: "women-kurthi/white.png"
+      black: "women-kurthi/black.jpg", "light-blue": "women-kurthi/light-blue.jpg",
+      "navy-blue": "women-kurthi/navy-blue.jpg", "olive-green": "women-kurthi/olive-green.jpg",
+      pink: "women-kurthi/pink.jpg", purple: "women-kurthi/purple.jpg", white: "women-kurthi/white.jpg"
     },
-    bottom: { black: "women-jeans/black.png", "light-blue": "women-jeans/light-blue.png" }
+    bottom: { black: "women-jeans/black.jpg", "light-blue": "women-jeans/light-blue.jpg" , "dark-blue": "women-jeans/dark-blue.jpg"}
   };
 if (window.history.replaceState) {
   window.history.replaceState(null, document.title, window.location.href);
