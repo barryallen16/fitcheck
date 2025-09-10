@@ -33,71 +33,69 @@
     }
   </style>
 </head>
-<body class="bg-gradient-to-b from-gray-50 via-white to-gray-50 min-h-screen flex items-center justify-center p-6">
+<body class="bg-gradient-to-b from-gray-50 via-white to-gray-50 min-h-screen flex flex-col p-4 sm:p-6">
 
-  <div class="w-full max-w-md">
+  <div class="w-full max-w-md flex-1 flex flex-col">
 
     <!-- TOP bar with toggle -->
-    <div class="flex justify-between mb-4 items-center bg-black/40 px-2 rounded-xl">
-      <img src="op-logo.png" class="w-20" alt="Brand Logo">
+    <div class="flex justify-between mb-4 items-center bg-black/40 px-2 py-2 rounded-xl">
+      <img src="op-logo.png" class="w-16 sm:w-20" alt="Brand Logo">
       <div id="gender-control" role="radiogroup" aria-label="Gender"
            class="bg-white/50 backdrop-blur-md border border-white/40 px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
         <button id="gender-male" role="radio" aria-checked="false"
                 data-gender="male"
-                class="gender-btn flex items-center gap-2 px-3 py-1 rounded-full text-sm text-gray-700 focus:outline-none">
-          <i class="fa-solid fa-mars text-base"></i><span>Male</span>
+                class="gender-btn flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm text-gray-700 focus:outline-none">
+          <i class="fa-solid fa-mars text-sm sm:text-base"></i><span>Male</span>
         </button>
         <button id="gender-female" role="radio" aria-checked="false"
                 data-gender="female"
-                class="gender-btn flex items-center gap-2 px-3 py-1 rounded-full text-sm text-gray-700 focus:outline-none">
-          <i class="fa-solid fa-venus text-base"></i><span>Female</span>
+                class="gender-btn flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm text-gray-700 focus:outline-none">
+          <i class="fa-solid fa-venus text-sm sm:text-base"></i><span>Female</span>
         </button>
       </div>
     </div>
 
     <!-- Preview Card -->
-    <div class="bg-white rounded-2xl shadow-lg p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-3 sm:p-4 flex-1 overflow-auto">
 
       <!-- Top -->
-      <div class="relative bg-white rounded-xl overflow-hidden mb-6">
+      <div class="relative bg-white rounded-xl overflow-hidden mb-4 sm:mb-6 max-h-[40vh] sm:max-h-[250px]">
         <button aria-label="Previous top" onclick="changeClothes('top', -1)"
-                class="nav-btn absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+                class="nav-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
           <i class="fa-solid fa-chevron-left text-gray-700"></i>
         </button>
-        <div >
-          <img id="main-top" class="w-full object-contain fade-img opacity-0 " alt="Top Preview" />
-        </div>
+        <img id="main-top" class="w-full object-contain fade-img opacity-0 max-h-[40vh] sm:max-h-[250px]" alt="Top Preview" />
         <button aria-label="Next top" onclick="changeClothes('top', 1)"
-                class="nav-btn absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+                class="nav-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
           <i class="fa-solid fa-chevron-right text-gray-700"></i>
         </button>
       </div>
 
       <!-- Bottom -->
-      <div class="relative bg-white rounded-xl overflow-hidden">
+      <div class="relative bg-white rounded-xl overflow-hidden max-h-[40vh] sm:max-h-[250px]">
         <button aria-label="Previous bottom" onclick="changeClothes('bottom', -1)"
-                class="nav-btn absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+                class="nav-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
           <i class="fa-solid fa-chevron-left text-gray-700"></i>
         </button>
-        <div class="">
-          <img id="main-bottom" class="w-full object-contain fade-img opacity-0 " alt="Bottom Preview" />
-        </div>
+        <img id="main-bottom" class="w-full object-contain fade-img opacity-0 max-h-[40vh] sm:max-h-[250px]" alt="Bottom Preview" />
         <button aria-label="Next bottom" onclick="changeClothes('bottom', 1)"
-                class="nav-btn absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+                class="nav-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
           <i class="fa-solid fa-chevron-right text-gray-700"></i>
         </button>
       </div>
 
     </div>
 
-    <!-- Submit -->
-    <div class="flex justify-center mt-6">
+    <!-- Submit Button Sticky -->
+    <div class="sticky bottom-4  flex justify-center mt-4 sm:mt-6 pt-4 bg-gradient-to-t from-gray-50 to-transparent">
       <button aria-label="Submit Outfit" onclick="submitOutfit()"
-              class="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-full shadow-md flex items-center gap-3 transition">
+              class="bg-gray-900 hover:bg-gray-800 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-2 sm:gap-3 text-sm sm:text-base transition">
         <i class="fa-solid fa-check"></i><span>Submit Outfit</span>
       </button>
     </div>
+
   </div>
+
 <script>
   const men = {
     top: { black: "men-shirts/black.png", brown: "men-shirts/brown.png", white: "men-shirts/white.png" },
