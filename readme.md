@@ -24,6 +24,8 @@ A product photograph of simple Men's [Color] denim relaxed fit jeans with no emb
 
 ### commands for pushing vite project to production
 ```
+bun vite build && git add . && git commit -m "updating website" && git push origin main
+cd ..
 git subtree split --prefix dataset-website/dist -b dist-branch
 git push origin dist-branch:website-prod --force
 git branch -D dist-branch
