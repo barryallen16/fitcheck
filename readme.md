@@ -28,3 +28,15 @@ git subtree split --prefix dataset-website/dist -b dist-branch
 git push origin dist-branch:website-prod --force
 git branch -D dist-branch
 ```
+
+### supa base table schema 
+```
+create table public.outfits (
+  id serial not null,
+  top text not null,
+  bottom text not null,
+  gender text not null,
+  created_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  constraint outfits_pkey primary key (id)
+) TABLESPACE pg_default;
+```
