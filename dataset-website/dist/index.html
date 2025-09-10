@@ -1,461 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Fitcheck</title>
-    <!-- Favicon & PWA Icons -->
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="favicon/apple-touch-icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="favicon/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="favicon/favicon-16x16.png"
-    />
-    <link rel="manifest" href="favicon/site.webmanifest" />
-    <link
-      rel="mask-icon"
-      href="favicon/safari-pinned-tab.svg"
-      color="#5bbad5"
-    />
-    <meta name="msapplication-TileColor" content="#ffffff" />
-    <meta name="theme-color" content="#ffffff" />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fitcheck</title>
+  <!-- Favicon & PWA Icons -->
+<link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+<link rel="manifest" href="favicon/site.webmanifest">
+<link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="theme-color" content="#ffffff">
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
 
-    <style>
-      .animate-bg {
-        background: linear-gradient(-45deg, #000000, #111827, #1e3a8a, #111827);
-        background-size: 400% 400%;
-        animation: gradientMove 10s ease infinite;
-      }
-      @keyframes gradientMove {
-        0% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-      .gender-btn.active {
-        transform: scale(1.1);
-        background-color: rgba(255, 255, 255, 0.2);
-        border-color: white;
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-      }
-      .fade-img {
-        transition: opacity 300ms ease;
-      }
-      .gender-btn.active {
-        background-color: #111827; /* gray-900 */
-        color: white;
-        transform: scale(1.05);
-      }
-      .gender-btn {
-        transition: all 0.2s ease;
-      }
-      .gender-btn:hover {
-        transform: scale(1.03);
-      }
-    </style>
-  </head>
-  <body
-    class="bg-gradient-to-b from-gray-50 via-white to-gray-50 min-h-screen flex flex-col p-4 sm:p-6"
-  >
-    <!-- Preview Card -->
-    <div
-      class="sticky top-8 z-50 flex justify-between items-center bg-black/40 backdrop-blur-md px-2 py-2 rounded-xl shadow-md"
-    >
-      <a href="https://www.instagram.com/ordinarypeople.team/">
-        <img src="op-logo.png" class="w-16 sm:w-20" alt="Brand Logo" />
-      </a>
-      <div
-        id="gender-control"
-        role="radiogroup"
-        aria-label="Gender"
-        class="bg-white/50 backdrop-blur-md border border-white/40 px-2 py-1 rounded-full shadow-sm flex items-center gap-1"
-      >
-        <button
-          id="gender-male"
-          role="radio"
-          aria-checked="false"
-          data-gender="male"
-          class="gender-btn flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm text-gray-700 focus:outline-none"
-        >
-          <i class="fa-solid fa-mars text-sm sm:text-base"></i><span>Male</span>
-        </button>
-        <button
-          id="gender-female"
-          role="radio"
-          aria-checked="false"
-          data-gender="female"
-          class="gender-btn flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm text-gray-700 focus:outline-none"
-        >
-          <i class="fa-solid fa-venus text-sm sm:text-base"></i
-          ><span>Female</span>
-        </button>
-      </div>
+
+  <style>
+    .animate-bg {
+      background: linear-gradient(-45deg, #000000, #111827, #1e3a8a, #111827);
+      background-size: 400% 400%;
+      animation: gradientMove 10s ease infinite;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .gender-btn.active {
+      transform: scale(1.1);
+      background-color: rgba(255,255,255,0.2);
+      border-color: white;
+      box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+    .fade-img {
+      transition: opacity 300ms ease;
+    }
+    .gender-btn.active {
+      background-color: #111827; /* gray-900 */
+      color: white;
+      transform: scale(1.05);
+    }
+    .gender-btn {
+      transition: all 0.2s ease;
+    }
+    .gender-btn:hover {
+      transform: scale(1.03);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-gray-50 via-white to-gray-50 min-h-screen flex flex-col p-4 sm:p-6">
+
+  <!-- Preview Card -->
+  <div class="sticky top-8 z-50 flex justify-between items-center bg-black/40 backdrop-blur-md px-2 py-2 rounded-xl shadow-md">
+    <a href="https://www.instagram.com/ordinarypeople.team/">
+      <img src="op-logo.png" class="w-16 sm:w-20" alt="Brand Logo">
+    </a>
+    <div id="gender-control" role="radiogroup" aria-label="Gender"
+         class="bg-white/50 backdrop-blur-md border border-white/40 px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+      <button id="gender-male" role="radio" aria-checked="false"
+              data-gender="male"
+              class="gender-btn flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm text-gray-700 focus:outline-none">
+        <i class="fa-solid fa-mars text-sm sm:text-base"></i><span>Male</span>
+      </button>
+      <button id="gender-female" role="radio" aria-checked="false"
+              data-gender="female"
+              class="gender-btn flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm text-gray-700 focus:outline-none">
+        <i class="fa-solid fa-venus text-sm sm:text-base"></i><span>Female</span>
+      </button>
     </div>
-    <div class="w-full max-w-md flex-1 flex flex-col top-0">
-      <!-- Hero Section - Full Screen -->
-      <section
-        class="h-screen flex flex-col justify-center items-center text-center relative z-10 px-6 bg-gradient-to-b from-white to-gray-100"
-      >
-        <div class="mb-6">
-          <a href="https://www.instagram.com/ordinarypeople.team/">
-            <img
-              src="op-logo.png"
-              class="w-40 sm:w-48 mx-auto drop-shadow-lg"
-              alt="Ordinary People Logo"
-          /></a>
-        </div>
+  </div>
+  <div class="w-full max-w-md flex-1 flex flex-col top-0">
 
-        <h1 class="text-black text-3xl sm:text-4xl font-bold leading-tight">
-          Help Us Build Smarter Style AI
-        </h1>
+<!-- Hero Section - Full Screen -->
+<section class="h-screen flex flex-col justify-center items-center text-center relative z-10 px-6 bg-white">
+  <div class="mb-6">
+    <a href="https://www.instagram.com/ordinarypeople.team/">
 
-        <p class="text-black/70 text-base sm:text-lg max-w-md mt-3">
-          Your quick choices help train our model to make better outfit
-          recommendations.
-          <span class="block text-sm text-black/50 mt-1">
-            Takes less than 10 seconds – no login needed.
-          </span>
-        </p>
+    <img src="op-logo.png" class="w-40 sm:w-48 mx-auto drop-shadow-lg" alt="Ordinary People Logo"></a>
+  </div>
 
-        <button
-          id="start-btn"
-          class="px-8 sm:px-10 py-3 rounded-full bg-black/90 text-white font-medium text-lg hover:bg-black transition-all mt-6"
-        >
-          Start Contributing
-          <i class="fa-solid fa-arrow-right inline-block ml-2"></i>
-        </button>
-      </section>
+  <h1 class="text-black text-3xl sm:text-4xl font-bold leading-tight">
+    Help Us Build Smarter Style AI
+  </h1>
 
-      <section id="clothes-section" class="scroll-mt-24">
-        <div
-          class="bg-white rounded-2xl shadow-lg p-3 sm:p-4 flex-1 overflow-auto"
-        >
-          <h2 class="text-xl font-bold mb-4">Choose Your Clothes</h2>
+  <p class="text-black/70 text-base sm:text-lg max-w-md mt-3">
+    Your quick choices help train our model to make better outfit recommendations.
+    <span class="block text-sm text-black/50 mt-1">
+      Takes less than 10 seconds – no login needed.
+    </span>
+  </p>
 
-          <!-- Top -->
-          <div
-            class="relative bg-white rounded-xl overflow-hidden mb-4 sm:mb-6 max-h-[40vh] sm:max-h-[250px]"
-          >
-            <button
-              aria-label="Previous top"
-              onclick="changeClothes('top', -1)"
-              class="nav-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition"
-            >
-              <i class="fa-solid fa-chevron-left text-gray-700"></i>
-            </button>
-            <img
-              id="main-top"
-              class="w-full object-contain fade-img opacity-0 max-h-[40vh] sm:max-h-[250px]"
-              alt="Top Preview"
-            />
-            <button
-              aria-label="Next top"
-              onclick="changeClothes('top', 1)"
-              class="nav-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition"
-            >
-              <i class="fa-solid fa-chevron-right text-gray-700"></i>
-            </button>
-          </div>
+  <button id="start-btn"
+          class="px-8 sm:px-10 py-3 rounded-full bg-black/90 text-white font-medium text-lg hover:bg-black transition-all mt-6">
+    Start Contributing <i class="fa-solid fa-arrow-right inline-block ml-2"></i>
+  </button>
 
-          <!-- Bottom -->
-          <div
-            class="relative bg-white rounded-xl overflow-hidden max-h-[40vh] sm:max-h-[250px]"
-          >
-            <button
-              aria-label="Previous bottom"
-              onclick="changeClothes('bottom', -1)"
-              class="nav-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition"
-            >
-              <i class="fa-solid fa-chevron-left text-gray-700"></i>
-            </button>
-            <img
-              id="main-bottom"
-              class="w-full object-contain fade-img opacity-0 max-h-[40vh] sm:max-h-[250px]"
-              alt="Bottom Preview"
-            />
-            <button
-              aria-label="Next bottom"
-              onclick="changeClothes('bottom', 1)"
-              class="nav-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition"
-            >
-              <i class="fa-solid fa-chevron-right text-gray-700"></i>
-            </button>
-          </div>
-        </div>
+</section>
 
-        <!-- Submit Button Sticky -->
-        <div
-          class="sticky bottom-0 mb-4 flex justify-center mt-4 sm:mt-6 pt-4 bg-gradient-to-t from-gray-50 to-transparent"
-        >
-          <button
-            aria-label="Submit Outfit"
-            onclick="submitOutfit()"
-            class="bg-gray-900 hover:bg-gray-800 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-2 sm:gap-3 text-sm sm:text-base transition"
-          >
-            <i class="fa-solid fa-check"></i><span>Submit Outfit</span>
-          </button>
-        </div>
-      </section>
+<section id="clothes-section" class="scroll-mt-24">
+  
+  <div class="bg-white rounded-2xl shadow-lg p-3 sm:p-4 flex-1 overflow-auto">
+    <h2 class="text-xl font-bold mb-4">Choose Your Clothes</h2>
+  
+    <!-- Top -->
+    <div class="relative bg-white rounded-xl overflow-hidden mb-4 sm:mb-6 max-h-[40vh] sm:max-h-[250px]">
+      <button aria-label="Previous top" onclick="changeClothes('top', -1)"
+              class="nav-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+        <i class="fa-solid fa-chevron-left text-gray-700"></i>
+      </button>
+      <img id="main-top" class="w-full object-contain fade-img opacity-0 max-h-[40vh] sm:max-h-[250px]" alt="Top Preview" />
+      <button aria-label="Next top" onclick="changeClothes('top', 1)"
+              class="nav-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+        <i class="fa-solid fa-chevron-right text-gray-700"></i>
+      </button>
     </div>
+  
+    <!-- Bottom -->
+    <div class="relative bg-white rounded-xl overflow-hidden max-h-[40vh] sm:max-h-[250px]">
+      <button aria-label="Previous bottom" onclick="changeClothes('bottom', -1)"
+              class="nav-btn absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+        <i class="fa-solid fa-chevron-left text-gray-700"></i>
+      </button>
+      <img id="main-bottom" class="w-full object-contain fade-img opacity-0 max-h-[40vh] sm:max-h-[250px]" alt="Bottom Preview" />
+      <button aria-label="Next bottom" onclick="changeClothes('bottom', 1)"
+              class="nav-btn absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+        <i class="fa-solid fa-chevron-right text-gray-700"></i>
+      </button>
+    </div>
+  
+  </div>
+  
+  <!-- Submit Button Sticky -->
+  <div class="sticky bottom-0 mb-4 flex justify-center mt-4 sm:mt-6 pt-4 bg-gradient-to-t from-gray-50 to-transparent">
+    <button aria-label="Submit Outfit" onclick="submitOutfit()"
+            class="bg-gray-900 hover:bg-gray-800 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md flex items-center gap-2 sm:gap-3 text-sm sm:text-base transition">
+      <i class="fa-solid fa-check"></i><span>Submit Outfit</span>
+    </button>
+  </div>
+</section>
+    
 
-    <script>
-      // Smooth scroll to clothes section
-      const startBtn = document.getElementById("start-btn");
-      startBtn.addEventListener("click", () => {
-        document
-          .getElementById("clothes-section")
-          .scrollIntoView({ behavior: "smooth" });
-      });
+  </div>
 
-      // Gender selection toggle
-      const genderButtons = document.querySelectorAll(".gender-btn");
-      genderButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          genderButtons.forEach((b) => b.setAttribute("aria-checked", "false"));
-          btn.setAttribute("aria-checked", "true");
-          startBtn.disabled = false;
-        });
-      });
+<script>
+    // Smooth scroll to clothes section
+  const startBtn = document.getElementById("start-btn");
+  startBtn.addEventListener("click", () => {
+    document.getElementById("clothes-section").scrollIntoView({ behavior: "smooth" });
+  });
 
-      const supabaseUrl = "https://dzlhehodyvemnfyfugov.supabase.co";
-      const supabaseAnonKey =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6bGhlaG9keXZlbW5meWZ1Z292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI0MTI3MjcsImV4cCI6MjA1Nzk4ODcyN30.lMUnXxA3Xn2vL5ezRHz49uy--A-sQLHKS-gV4yXfbuY";
-      const { createClient } = window.supabase;
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  // Gender selection toggle
+  const genderButtons = document.querySelectorAll(".gender-btn");
+  genderButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      genderButtons.forEach(b => b.setAttribute("aria-checked", "false"));
+      btn.setAttribute("aria-checked", "true");
+      startBtn.disabled = false;
+    });
+  });
 
-      const men = {
-        top: {
-          black: "men-shirts/black.jpg",
-          brown: "men-shirts/brown.jpg",
-          white: "men-shirts/white.jpg",
-          green: "men-shirts/green.jpg",
-          grey: "men-shirts/grey.jpg",
-          "light-blue": "men-shirts/light-blue.jpg",
-          maroon: "men-shirts/maroon.jpg",
-          mustard: "men-shirts/mustard.jpg",
-          "navy-blue": "men-shirts/navy-blue.jpg",
-          pink: "men-shirts/pink.jpg",
-        },
-        bottom: {
-          black: "men-jeans/black.jpg",
-          "dark-blue": "men-jeans/dark-blue.jpg",
-          "light-blue": "men-jeans/light-blue.jpg",
-        },
-      };
+  const supabaseUrl = 'https://dzlhehodyvemnfyfugov.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6bGhlaG9keXZlbW5meWZ1Z292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI0MTI3MjcsImV4cCI6MjA1Nzk4ODcyN30.lMUnXxA3Xn2vL5ezRHz49uy--A-sQLHKS-gV4yXfbuY';
+  const { createClient } = window.supabase;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-      const women = {
-        top: {
-          black: "women-kurthi/black.jpg",
-          "light-blue": "women-kurthi/light-blue.jpg",
-          "navy-blue": "women-kurthi/navy-blue.jpg",
-          "olive-green": "women-kurthi/olive-green.jpg",
-          pink: "women-kurthi/pink.jpg",
-          purple: "women-kurthi/purple.jpg",
-          white: "women-kurthi/white.jpg",
-        },
-        bottom: {
-          black: "women-jeans/black.jpg",
-          "light-blue": "women-jeans/light-blue.jpg",
-          "dark-blue": "women-jeans/dark-blue.jpg",
-        },
-      };
-      if (window.history.replaceState) {
-        window.history.replaceState(null, document.title, window.location.href);
+  const men = {
+    top: { black: "men-shirts/black.jpg", brown: "men-shirts/brown.jpg", white: "men-shirts/white.jpg",
+green:"men-shirts/green.jpg",grey:"men-shirts/grey.jpg", "light-blue":"men-shirts/light-blue.jpg", maroon:"men-shirts/maroon.jpg",
+mustard:"men-shirts/mustard.jpg","navy-blue":"men-shirts/navy-blue.jpg",pink:"men-shirts/pink.jpg"
+
+     },
+    bottom: { black: "men-jeans/black.jpg", "dark-blue": "men-jeans/dark-blue.jpg" ,"light-blue": "men-jeans/light-blue.jpg"}
+  };
+
+  const women = {
+    top: {
+      black: "women-kurthi/black.jpg", "light-blue": "women-kurthi/light-blue.jpg",
+      "navy-blue": "women-kurthi/navy-blue.jpg", "olive-green": "women-kurthi/olive-green.jpg",
+      pink: "women-kurthi/pink.jpg", purple: "women-kurthi/purple.jpg", white: "women-kurthi/white.jpg"
+    },
+    bottom: { black: "women-jeans/black.jpg", "light-blue": "women-jeans/light-blue.jpg" , "dark-blue": "women-jeans/dark-blue.jpg"}
+  };
+if (window.history.replaceState) {
+  window.history.replaceState(null, document.title, window.location.href);
+}
+
+let currentGender = (localStorage.getItem("selectedGender") || "female").toLowerCase();
+
+
+  const selections = JSON.parse(localStorage.getItem("selections")) || {
+    male: { top: Object.keys(men.top)[0], bottom: Object.keys(men.bottom)[0] },
+    female: { top: Object.keys(women.top)[0], bottom: Object.keys(women.bottom)[0] }
+  };
+
+  const topImg = document.getElementById("main-top");
+  const botImg = document.getElementById("main-bottom");
+  const genderMaleBtn = document.getElementById("gender-male");
+  const genderFemaleBtn = document.getElementById("gender-female");
+
+  function dataset() { return currentGender === "male" ? men : women; }
+
+  function setImgWithFade(imgEl, src) {
+    imgEl.style.opacity = 0;
+    setTimeout(() => {
+      imgEl.src = src;
+      imgEl.onload = () => imgEl.style.opacity = 1;
+    }, 150);
+  }
+
+  function updateGenderUI() {
+    genderMaleBtn.classList.toggle("active", currentGender === "male");
+    genderFemaleBtn.classList.toggle("active", currentGender === "female");
+    genderMaleBtn.setAttribute("aria-checked", currentGender === "male");
+    genderFemaleBtn.setAttribute("aria-checked", currentGender === "female");
+    localStorage.setItem("selectedGender", currentGender);
+  }
+
+  function updatePreview() {
+    const ds = dataset();
+    const sel = selections[currentGender];
+    setImgWithFade(topImg, ds.top[sel.top]);
+    setImgWithFade(botImg, ds.bottom[sel.bottom]);
+    updateGenderUI();
+    localStorage.setItem("selections", JSON.stringify(selections));
+  }
+
+  function changeClothes(type, direction) {
+    const ds = dataset()[type];
+    const keys = Object.keys(ds);
+    let idx = keys.indexOf(selections[currentGender][type]);
+    idx = (idx + direction + keys.length) % keys.length;
+    selections[currentGender][type] = keys[idx];
+    updatePreview();
+  }
+
+  genderMaleBtn.addEventListener("click", () => { currentGender = "male"; updatePreview(); });
+  genderFemaleBtn.addEventListener("click", () => { currentGender = "female"; updatePreview(); });
+
+async function submitOutfit() {
+  const payload = {
+    gender: currentGender,
+    top: selections[currentGender].top,
+    bottom: selections[currentGender].bottom
+  };
+
+  const submitBtn = document.querySelector('[aria-label="Submit Outfit"]');
+
+  // Disable button immediately to prevent multiple clicks
+  submitBtn.disabled = true;
+
+  // Store original text & icon
+  const originalContent = submitBtn.innerHTML;
+
+  try {
+    const { data, error } = await supabase
+      .from('outfits')
+      .insert([payload]);
+
+    if (error) throw error;
+
+    console.log('Supabase response:', data);
+
+    // ✅ Feedback: change button content and color
+    submitBtn.innerHTML = `<i class="fa-solid fa-check"></i> Submitted`;
+    submitBtn.classList.remove('bg-gray-900', 'hover:bg-gray-800');
+    submitBtn.classList.add('bg-green-600');
+
+    // Restore after 2 seconds
+    setTimeout(() => {
+      submitBtn.innerHTML = originalContent;
+      submitBtn.classList.remove('bg-green-600');
+      submitBtn.classList.add('bg-gray-900', 'hover:bg-gray-800');
+      submitBtn.disabled = false;
+    }, 2000);
+
+  } catch (err) {
+    console.error('Error submitting outfit:', err);
+    // Optional: show error feedback
+    submitBtn.innerHTML = `<i class="fa-solid fa-xmark"></i> Error`;
+    submitBtn.classList.remove('bg-gray-900', 'hover:bg-gray-800');
+    submitBtn.classList.add('bg-red-600');
+
+    setTimeout(() => {
+      submitBtn.innerHTML = originalContent;
+      submitBtn.classList.remove('bg-red-600');
+      submitBtn.classList.add('bg-gray-900', 'hover:bg-gray-800');
+      submitBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+  // ---------------------------
+  // 🆕 Swipe Support
+  // ---------------------------
+  function addSwipeListener(element, type) {
+    let startX = 0;
+    let isSwiping = false;
+
+    element.addEventListener("touchstart", e => {
+      startX = e.touches[0].clientX;
+      isSwiping = true;
+    });
+
+    element.addEventListener("touchmove", e => {
+      if (!isSwiping) return;
+      const deltaX = e.touches[0].clientX - startX;
+      // Prevent scrolling if swipe is horizontal enough
+      if (Math.abs(deltaX) > 10) e.preventDefault();
+    }, { passive: false });
+
+    element.addEventListener("touchend", e => {
+      if (!isSwiping) return;
+      const endX = e.changedTouches[0].clientX;
+      const deltaX = endX - startX;
+      if (Math.abs(deltaX) > 50) { // threshold
+        if (deltaX > 0) changeClothes(type, -1); // swipe right → previous
+        else changeClothes(type, 1); // swipe left → next
       }
+      isSwiping = false;
+    });
+  }
 
-      let currentGender = (
-        localStorage.getItem("selectedGender") || "female"
-      ).toLowerCase();
-
-      const selections = JSON.parse(localStorage.getItem("selections")) || {
-        male: {
-          top: Object.keys(men.top)[0],
-          bottom: Object.keys(men.bottom)[0],
-        },
-        female: {
-          top: Object.keys(women.top)[0],
-          bottom: Object.keys(women.bottom)[0],
-        },
-      };
-
-      const topImg = document.getElementById("main-top");
-      const botImg = document.getElementById("main-bottom");
-      const genderMaleBtn = document.getElementById("gender-male");
-      const genderFemaleBtn = document.getElementById("gender-female");
-
-      function dataset() {
-        return currentGender === "male" ? men : women;
-      }
-
-      function setImgWithFade(imgEl, src) {
-        imgEl.style.opacity = 0;
-        setTimeout(() => {
-          imgEl.src = src;
-          imgEl.onload = () => (imgEl.style.opacity = 1);
-        }, 150);
-      }
-
-      function updateGenderUI() {
-        genderMaleBtn.classList.toggle("active", currentGender === "male");
-        genderFemaleBtn.classList.toggle("active", currentGender === "female");
-        genderMaleBtn.setAttribute("aria-checked", currentGender === "male");
-        genderFemaleBtn.setAttribute(
-          "aria-checked",
-          currentGender === "female"
-        );
-        localStorage.setItem("selectedGender", currentGender);
-      }
-
-      function updatePreview() {
-        const ds = dataset();
-        const sel = selections[currentGender];
-        setImgWithFade(topImg, ds.top[sel.top]);
-        setImgWithFade(botImg, ds.bottom[sel.bottom]);
-        updateGenderUI();
-        localStorage.setItem("selections", JSON.stringify(selections));
-      }
-
-      function changeClothes(type, direction) {
-        const ds = dataset()[type];
-        const keys = Object.keys(ds);
-        let idx = keys.indexOf(selections[currentGender][type]);
-        idx = (idx + direction + keys.length) % keys.length;
-        selections[currentGender][type] = keys[idx];
-        updatePreview();
-      }
-
-      genderMaleBtn.addEventListener("click", () => {
-        currentGender = "male";
-        updatePreview();
-      });
-      genderFemaleBtn.addEventListener("click", () => {
-        currentGender = "female";
-        updatePreview();
-      });
-
-      async function submitOutfit() {
-        const payload = {
-          gender: currentGender,
-          top: selections[currentGender].top,
-          bottom: selections[currentGender].bottom,
-        };
-
-        const submitBtn = document.querySelector(
-          '[aria-label="Submit Outfit"]'
-        );
-
-        // Disable button immediately to prevent multiple clicks
-        submitBtn.disabled = true;
-
-        // Store original text & icon
-        const originalContent = submitBtn.innerHTML;
-
-        try {
-          const { data, error } = await supabase
-            .from("outfits")
-            .insert([payload]);
-
-          if (error) throw error;
-
-          console.log("Supabase response:", data);
-
-          // ✅ Feedback: change button content and color
-          submitBtn.innerHTML = `<i class="fa-solid fa-check"></i> Submitted`;
-          submitBtn.classList.remove("bg-gray-900", "hover:bg-gray-800");
-          submitBtn.classList.add("bg-green-600");
-
-          // Restore after 2 seconds
-          setTimeout(() => {
-            submitBtn.innerHTML = originalContent;
-            submitBtn.classList.remove("bg-green-600");
-            submitBtn.classList.add("bg-gray-900", "hover:bg-gray-800");
-            submitBtn.disabled = false;
-          }, 2000);
-        } catch (err) {
-          console.error("Error submitting outfit:", err);
-          // Optional: show error feedback
-          submitBtn.innerHTML = `<i class="fa-solid fa-xmark"></i> Error`;
-          submitBtn.classList.remove("bg-gray-900", "hover:bg-gray-800");
-          submitBtn.classList.add("bg-red-600");
-
-          setTimeout(() => {
-            submitBtn.innerHTML = originalContent;
-            submitBtn.classList.remove("bg-red-600");
-            submitBtn.classList.add("bg-gray-900", "hover:bg-gray-800");
-            submitBtn.disabled = false;
-          }, 2000);
-        }
-      }
-
-      // ---------------------------
-      // 🆕 Swipe Support
-      // ---------------------------
-      function addSwipeListener(element, type) {
-        let startX = 0;
-        let isSwiping = false;
-
-        element.addEventListener("touchstart", (e) => {
-          startX = e.touches[0].clientX;
-          isSwiping = true;
-        });
-
-        element.addEventListener(
-          "touchmove",
-          (e) => {
-            if (!isSwiping) return;
-            const deltaX = e.touches[0].clientX - startX;
-            // Prevent scrolling if swipe is horizontal enough
-            if (Math.abs(deltaX) > 10) e.preventDefault();
-          },
-          { passive: false }
-        );
-
-        element.addEventListener("touchend", (e) => {
-          if (!isSwiping) return;
-          const endX = e.changedTouches[0].clientX;
-          const deltaX = endX - startX;
-          if (Math.abs(deltaX) > 50) {
-            // threshold
-            if (deltaX > 0) changeClothes(type, -1); // swipe right → previous
-            else changeClothes(type, 1); // swipe left → next
-          }
-          isSwiping = false;
-        });
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-        updatePreview();
-        // Attach swipe listeners
-        addSwipeListener(topImg, "top");
-        addSwipeListener(botImg, "bottom");
-      });
-    </script>
-  </body>
+  document.addEventListener("DOMContentLoaded", () => {
+    updatePreview();
+    // Attach swipe listeners
+    addSwipeListener(topImg, "top");
+    addSwipeListener(botImg, "bottom");
+  });
+</script>
+    
+</body>
 </html>
