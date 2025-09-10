@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Clothes Selection — Improved</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <style>
+    .fade-img {
+      transition: opacity 300ms ease;
+    }
+    .gender-btn.active {
+      background-color: #111827; /* gray-900 */
+      color: white;
+      transform: scale(1.05);
+    }
+    .gender-btn {
+      transition: all 0.2s ease;
+    }
+    .gender-btn:hover {
+      transform: scale(1.03);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-gray-50 via-white to-gray-50 min-h-screen flex items-center justify-center p-6">
+
+  <div class="w-full max-w-md">
+
+    <!-- TOP bar with toggle -->
+    <div class="flex justify-between mb-4 items-center bg-black/40 px-2 rounded-xl">
+      <img src="op-logo.png" class="w-20" alt="Brand Logo">
+      <div id="gender-control" role="radiogroup" aria-label="Gender"
+           class="bg-white/50 backdrop-blur-md border border-white/40 px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+        <button id="gender-male" role="radio" aria-checked="false"
+                data-gender="male"
+                class="gender-btn flex items-center gap-2 px-3 py-1 rounded-full text-sm text-gray-700 focus:outline-none">
+          <i class="fa-solid fa-mars text-base"></i><span>Male</span>
+        </button>
+        <button id="gender-female" role="radio" aria-checked="false"
+                data-gender="female"
+                class="gender-btn flex items-center gap-2 px-3 py-1 rounded-full text-sm text-gray-700 focus:outline-none">
+          <i class="fa-solid fa-venus text-base"></i><span>Female</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Preview Card -->
+    <div class="bg-white rounded-2xl shadow-lg p-4">
+
+      <!-- Top -->
+      <div class="relative bg-white rounded-xl overflow-hidden mb-6">
+        <button aria-label="Previous top" onclick="changeClothes('top', -1)"
+                class="nav-btn absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+          <i class="fa-solid fa-chevron-left text-gray-700"></i>
+        </button>
+        <div >
+          <img id="main-top" class="w-full object-contain fade-img opacity-0 " alt="Top Preview" />
+        </div>
+        <button aria-label="Next top" onclick="changeClothes('top', 1)"
+                class="nav-btn absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+          <i class="fa-solid fa-chevron-right text-gray-700"></i>
+        </button>
+      </div>
+
+      <!-- Bottom -->
+      <div class="relative bg-white rounded-xl overflow-hidden">
+        <button aria-label="Previous bottom" onclick="changeClothes('bottom', -1)"
+                class="nav-btn absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+          <i class="fa-solid fa-chevron-left text-gray-700"></i>
+        </button>
+        <div class="">
+          <img id="main-bottom" class="w-full object-contain fade-img opacity-0 " alt="Bottom Preview" />
+        </div>
+        <button aria-label="Next bottom" onclick="changeClothes('bottom', 1)"
+                class="nav-btn absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white hover:bg-gray-100 drop-shadow flex items-center justify-center border transition">
+          <i class="fa-solid fa-chevron-right text-gray-700"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Submit -->
+    <div class="flex justify-center mt-6">
+      <button aria-label="Submit Outfit" onclick="submitOutfit()"
+              class="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-full shadow-md flex items-center gap-3 transition">
+        <i class="fa-solid fa-check"></i><span>Submit Outfit</span>
+      </button>
+    </div>
+  </div>
+<script>
+  const men = {
+    top: { black: "men-shirts/black.png", brown: "men-shirts/brown.png", white: "men-shirts/white.png" },
+    bottom: { black: "men-jeans/black.png", "dark-blue": "men-jeans/dark-blue.png" }
+  };
+
+  const women = {
+    top: {
+      black: "women-kurthi/black.png", "light-blue": "women-kurthi/light-blue.png",
+      "navy-blue": "women-kurthi/navy-blue.png", "olive-green": "women-kurthi/olive-green.png",
+      pink: "women-kurthi/pink.png", purple: "women-kurthi/purple.png", white: "women-kurthi/white.png"
+    },
+    bottom: { black: "women-jeans/black.png", "light-blue": "women-jeans/light-blue.png" }
+  };
+if (window.history.replaceState) {
+  window.history.replaceState(null, document.title, window.location.href);
+}
+
+let currentGender = (localStorage.getItem("selectedGender") || "female").toLowerCase();
+
+
+  const selections = JSON.parse(localStorage.getItem("selections")) || {
+    male: { top: Object.keys(men.top)[0], bottom: Object.keys(men.bottom)[0] },
+    female: { top: Object.keys(women.top)[0], bottom: Object.keys(women.bottom)[0] }
+  };
+
+  const topImg = document.getElementById("main-top");
+  const botImg = document.getElementById("main-bottom");
+  const genderMaleBtn = document.getElementById("gender-male");
+  const genderFemaleBtn = document.getElementById("gender-female");
+
+  function dataset() { return currentGender === "male" ? men : women; }
+
+  function setImgWithFade(imgEl, src) {
+    imgEl.style.opacity = 0;
+    setTimeout(() => {
+      imgEl.src = src;
+      imgEl.onload = () => imgEl.style.opacity = 1;
+    }, 150);
+  }
+
+  function updateGenderUI() {
+    genderMaleBtn.classList.toggle("active", currentGender === "male");
+    genderFemaleBtn.classList.toggle("active", currentGender === "female");
+    genderMaleBtn.setAttribute("aria-checked", currentGender === "male");
+    genderFemaleBtn.setAttribute("aria-checked", currentGender === "female");
+    localStorage.setItem("selectedGender", currentGender);
+  }
+
+  function updatePreview() {
+    const ds = dataset();
+    const sel = selections[currentGender];
+    setImgWithFade(topImg, ds.top[sel.top]);
+    setImgWithFade(botImg, ds.bottom[sel.bottom]);
+    updateGenderUI();
+    localStorage.setItem("selections", JSON.stringify(selections));
+  }
+
+  function changeClothes(type, direction) {
+    const ds = dataset()[type];
+    const keys = Object.keys(ds);
+    let idx = keys.indexOf(selections[currentGender][type]);
+    idx = (idx + direction + keys.length) % keys.length;
+    selections[currentGender][type] = keys[idx];
+    updatePreview();
+  }
+
+  genderMaleBtn.addEventListener("click", () => { currentGender = "male"; updatePreview(); });
+  genderFemaleBtn.addEventListener("click", () => { currentGender = "female"; updatePreview(); });
+
+  function submitOutfit() {
+    const payload = { gender: currentGender, ...selections[currentGender], created_at: new Date().toISOString() };
+    console.log("Submitting outfit:", payload);
+    alert("Outfit saved (check console).");
+  }
+
+  // ---------------------------
+  // 🆕 Swipe Support
+  // ---------------------------
+  function addSwipeListener(element, type) {
+    let startX = 0;
+    let isSwiping = false;
+
+    element.addEventListener("touchstart", e => {
+      startX = e.touches[0].clientX;
+      isSwiping = true;
+    });
+
+    element.addEventListener("touchmove", e => {
+      if (!isSwiping) return;
+      const deltaX = e.touches[0].clientX - startX;
+      // Prevent scrolling if swipe is horizontal enough
+      if (Math.abs(deltaX) > 10) e.preventDefault();
+    }, { passive: false });
+
+    element.addEventListener("touchend", e => {
+      if (!isSwiping) return;
+      const endX = e.changedTouches[0].clientX;
+      const deltaX = endX - startX;
+      if (Math.abs(deltaX) > 50) { // threshold
+        if (deltaX > 0) changeClothes(type, -1); // swipe right → previous
+        else changeClothes(type, 1); // swipe left → next
+      }
+      isSwiping = false;
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    updatePreview();
+    // Attach swipe listeners
+    addSwipeListener(topImg, "top");
+    addSwipeListener(botImg, "bottom");
+  });
+</script>
+    
+</body>
+</html>
