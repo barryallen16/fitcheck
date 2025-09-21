@@ -15,6 +15,12 @@ A product photograph of simple Women's [Color] denim high-rise curvy fit jeans w
 ```
 A product photograph of simple Men's [Color] denim relaxed fit jeans with no embellishments. The jeans are presented floating against a clean, pure white background with a soft drop shadow. The image is a straight-on, full-length shot, captured in a studio with soft, even lighting. Minimalist and elegant.
 ```
+### Mens's tops
+```
+Studio product photograph of a [Item Name] — [Description/Cultural Note]. The garment is presented floating gracefully against a seamless, pure white infinity background, casting a soft, natural drop shadow beneath to imply depth. Shot straight-on in full-length view, perfectly centered and symmetrical, with fabric texture, stitching, and design details (e.g., embroidery, collar style, buttons, drape) subtly visible to convey premium quality. Lit with soft, diffused studio lighting from multiple angles to highlight silhouette and material without harsh shadows. No models, mannequins, or props — minimalist, clean, and elegant aesthetic. High-resolution, commercial-grade product photography style, suitable for e-commerce or luxury brand catalog. Ultra-detailed, photorealistic, 8K.
+
+Example context for AI: If item is “White Kurta”, emphasize traditional cotton weave and festival elegance. If “Organza Jacket”, highlight sheer texture and layering potential. If “Blue Sherwani”, focus on embroidery and regal drape.
+```
 
 ### new womens kurti prompt
 ```
