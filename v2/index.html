@@ -206,6 +206,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Feedback Button Section -->
+    <div id="feedback-section" class="hidden mt-6 p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl shadow-lg text-white text-center">
+      <p class="text-sm mb-3">Thanks for helping train our AI ! Got suggestions?</p>
+      <a href="https://ig.me/m/ordinarypeople.team" target="_blank" rel="noopener noreferrer" class="inline-block bg-white text-purple-600 px-6 py-3 rounded-full font-semibold text-sm hover:bg-gray-100 transition-colors flex items-center gap-2 mx-auto">
+        <i class="fab fa-instagram"></i>Send Suggestions on Instagram
+      </a>
+    </div>
   
   </div>
   
@@ -453,6 +461,9 @@ let inactivityTimer;
       voteCount++;
       voteCounter.textContent = `${voteCount} votes`;
       localStorage.setItem("voteCount", voteCount.toString());
+      if (voteCount >= 16) {
+        document.getElementById('feedback-section').classList.remove('hidden');
+      }
       return true;
     } catch (err) {
       console.error('Error submitting outfit:', err);
@@ -735,6 +746,9 @@ let inactivityTimer;
   document.addEventListener("DOMContentLoaded", () => {
     preloadAllImages();
     voteCounter.textContent = `${voteCount} votes`;
+    if (voteCount >= 16) {
+      document.getElementById('feedback-section').classList.remove('hidden');
+    }
     if (currentGender) {
       currentGender = currentGender.toLowerCase();
       updateGenderUI();
