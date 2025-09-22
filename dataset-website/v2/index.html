@@ -54,6 +54,9 @@
     .slide-from-right {
       animation: slideFromRight 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
+    .slide-from-bottom {
+      animation: slideFromBottom 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
     @keyframes slideFromLeft {
       from {
         opacity: 0;
@@ -74,6 +77,16 @@
         transform: translateX(0) rotate(0deg);
       }
     }
+    @keyframes slideFromBottom {
+      from {
+        opacity: 0;
+        transform: translateY(100%) rotate(0deg);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg);
+      }
+    }
     .approved-glow {
       animation: glow 0.6s ease-in-out;
     }
@@ -92,6 +105,9 @@
     }
     #outfit-card {
       will-change: transform;
+    }
+    #skip-suggestion {
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -151,7 +167,7 @@
       <h2 class="text-xl font-bold">Vote on Random Outfits</h2>
       <div id="vote-counter" class="text-sm font-medium text-gray-600">0 votes</div>
     </div>
-    <p class="text-gray-600 text-sm mb-4">Swipe right to approve, left to reject</p>
+    <p class="text-gray-600 text-sm mb-4">Swipe right to approve, left to reject, up to skip</p>
   
     <div id="outfit-container" class="relative overflow-hidden">
       <div id="outfit-card" class="relative bg-white rounded-2xl overflow-hidden max-h-[90vh] shadow-xl border border-gray-100 transition-all duration-[400ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]">
@@ -162,11 +178,19 @@
         <div id="nah-label" class="absolute -left-24 top-1/2 -translate-y-1/2 z-20 bg-red-500 text-white px-6 py-3 rounded-full shadow-lg whitespace-nowrap text-lg font-bold opacity-0 transition-all duration-200 transform translate-x-[-100%]">
           <i class="fa-solid fa-xmark mr-2"></i>NAH
         </div>
+        <div id="skip-label" class="absolute -top-24 left-1/2 -translate-x-1/2 z-20 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg whitespace-nowrap text-lg font-bold opacity-0 transition-all duration-200">
+          <i class="fa-solid fa-forward mr-2"></i>SKIP
+        </div>
         
         <!-- Feedback Overlay -->
         <div id="swipe-feedback" class="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm text-white text-4xl font-bold opacity-0 transition-all duration-300 pointer-events-none z-10 gap-2">
           <i id="feedback-icon" class="text-5xl"></i>
           <span id="feedback-text"></span>
+        </div>
+        
+        <!-- Skip Suggestion -->
+        <div id="skip-suggestion" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500/90 backdrop-blur-sm text-black px-6 py-3 rounded-full text-sm font-medium opacity-0 transition-opacity duration-300 pointer-events-none z-30 flex items-center gap-2">
+          Can't decide? <i class="fa-solid fa-hand-point-up"></i> Swipe up to skip!
         </div>
         
         <div class="p-3 sm:p-4 relative z-0">
@@ -279,6 +303,7 @@ let currentGender = localStorage.getItem("selectedGender");
 let voteCount = parseInt(localStorage.getItem("voteCount") || "0");
 const voteCounter = document.getElementById("vote-counter");
 let lastSwipeDirection = 'right'; // default for first load
+let inactivityTimer;
 
   const topImg = document.getElementById("main-top");
   const botImg = document.getElementById("main-bottom");
@@ -290,6 +315,8 @@ let lastSwipeDirection = 'right'; // default for first load
   const feedbackText = document.getElementById("feedback-text");
   const addLabel = document.getElementById("add-label");
   const nahLabel = document.getElementById("nah-label");
+  const skipLabel = document.getElementById("skip-label");
+  const skipSuggestion = document.getElementById("skip-suggestion");
 
   let currentOutfits = null;
   let currentIndex = 0;
@@ -380,19 +407,29 @@ let lastSwipeDirection = 'right'; // default for first load
     const nextOutfit = currentOutfits[currentIndex];
     const ds = dataset();
     preloadOutfit(nextOutfit, ds).catch(console.log);
-    outfitCard.style.transform = 'translateX(0) rotate(0deg)';
+    outfitCard.style.transform = 'translateX(0) translateY(0) rotate(0deg)';
     addLabel.classList.add('opacity-0');
     nahLabel.classList.add('opacity-0');
+    skipLabel.classList.add('opacity-0');
     swipeFeedback.classList.remove('opacity-100');
-    outfitCard.classList.remove('slide-from-left', 'slide-from-right', 'approved-glow', 'rejected-shake');
+    outfitCard.classList.remove('slide-from-left', 'slide-from-right', 'slide-from-bottom', 'approved-glow', 'rejected-shake');
+    skipSuggestion.classList.add('opacity-0');
+    clearTimeout(inactivityTimer);
     outfitCard.style.opacity = '0';
     loadOutfit(nextOutfit, ds).then(() => {
       outfitCard.style.opacity = '1';
       if (lastSwipeDirection === 'right') {
         outfitCard.classList.add('slide-from-left');
-      } else {
+      } else if (lastSwipeDirection === 'left') {
         outfitCard.classList.add('slide-from-right');
+      } else if (lastSwipeDirection === 'up') {
+        outfitCard.classList.add('slide-from-bottom');
+      } else {
+        outfitCard.classList.add('slide-from-left');
       }
+      inactivityTimer = setTimeout(() => {
+        skipSuggestion.classList.remove('opacity-0');
+      }, 5000);
     });
   }
 
@@ -424,31 +461,49 @@ let lastSwipeDirection = 'right'; // default for first load
   }
 
   function showFeedback(status) {
-    const isApproved = status === 'approved';
-    feedbackIcon.className = `fa-solid fa-${isApproved ? 'plus' : 'xmark'} text-5xl`;
-    feedbackIcon.style.color = isApproved ? '#10b981' : '#ef4444';
-    feedbackText.textContent = isApproved ? 'ADD!' : 'NAH!';
+    let iconClass, color, text, animationClass;
+    switch(status) {
+      case 'approved':
+        iconClass = 'fa-solid fa-plus';
+        color = '#10b981';
+        text = 'ADD!';
+        animationClass = 'approved-glow';
+        break;
+      case 'rejected':
+        iconClass = 'fa-solid fa-xmark';
+        color = '#ef4444';
+        text = 'NAH!';
+        animationClass = 'rejected-shake';
+        break;
+      case 'skipped':
+        iconClass = 'fa-solid fa-forward';
+        color = '#f59e0b';
+        text = 'SKIP!';
+        animationClass = '';
+        break;
+    }
+    feedbackIcon.className = iconClass + ' text-5xl';
+    feedbackIcon.style.color = color;
+    feedbackText.textContent = text;
     swipeFeedback.classList.add('opacity-100');
-    if (isApproved) {
-      outfitCard.classList.add('approved-glow');
+    if (animationClass) {
+      outfitCard.classList.add(animationClass);
       setTimeout(() => {
-        outfitCard.classList.remove('approved-glow');
+        outfitCard.classList.remove(animationClass);
       }, 600);
+    }
+    if (status === 'approved') {
       if ('vibrate' in navigator) {
         navigator.vibrate([50, 100, 50]);
       }
-    } else {
-      outfitCard.classList.add('rejected-shake');
-      setTimeout(() => {
-        outfitCard.classList.remove('rejected-shake');
-      }, 600);
+    } else if (status === 'rejected') {
       if ('vibrate' in navigator) {
         navigator.vibrate([100]);
       }
     }
   }
 
-  function updateSwipeLabels(deltaX) {
+  function updateHorizontalLabels(deltaX) {
     if (deltaX > 60) {
       addLabel.classList.remove('opacity-0');
       nahLabel.classList.add('opacity-0');
@@ -475,6 +530,8 @@ let lastSwipeDirection = 'right'; // default for first load
     currentY = startY;
     isDragging = true;
     outfitCard.style.transition = 'none';
+    skipSuggestion.classList.add('opacity-0');
+    clearTimeout(inactivityTimer);
   }, { passive: true });
 
   outfitCard.addEventListener('touchmove', (e) => {
@@ -482,26 +539,47 @@ let lastSwipeDirection = 'right'; // default for first load
     currentX = e.touches[0].clientX;
     currentY = e.touches[0].clientY;
     const deltaX = currentX - startX;
-    const deltaY = Math.abs(currentY - startY);
-    if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > 15) {
+    const deltaY = currentY - startY;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+    if (absDeltaX > absDeltaY && absDeltaX > 15) {
+      // Horizontal dominant
       e.preventDefault();
+      const rotate = deltaX / 15;
+      outfitCard.style.transform = `translateX(${deltaX}px) translateY(0) rotate(${rotate}deg)`;
+      updateHorizontalLabels(deltaX);
+      skipLabel.classList.add('opacity-0');
+    } else if (absDeltaY > absDeltaX && deltaY < 0 && absDeltaY > 15) {
+      // Vertical up dominant
+      e.preventDefault();
+      const rotate = deltaY / 20;
+      outfitCard.style.transform = `translateX(0) translateY(${deltaY}px) rotate(${rotate}deg)`;
+      if (deltaY < -60) {
+        skipLabel.classList.remove('opacity-0');
+      } else {
+        skipLabel.classList.add('opacity-0');
+      }
+      updateHorizontalLabels(0);
+    } else {
+      outfitCard.style.transform = 'translateX(0) translateY(0) rotate(0deg)';
     }
-    const rotate = deltaX / 15;
-    outfitCard.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
-    updateSwipeLabels(deltaX);
   }, { passive: false });
 
   outfitCard.addEventListener('touchend', async (e) => {
     if (!isDragging) return;
     isDragging = false;
     const deltaX = currentX - startX;
+    const deltaY = currentY - startY;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
     const threshold = 120;
     outfitCard.style.transition = 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)';
-    if (Math.abs(deltaX) > threshold) {
+    if (absDeltaX > absDeltaY && absDeltaX > threshold) {
+      // Horizontal swipe
       const status = deltaX > 0 ? 'approved' : 'rejected';
       lastSwipeDirection = deltaX > 0 ? 'right' : 'left';
       const flyOut = (deltaX > 0 ? 1.5 : -1.5) * window.innerWidth;
-      outfitCard.style.transform = `translateX(${flyOut}px) rotate(${deltaX / 8}deg) scale(0.9)`;
+      outfitCard.style.transform = `translateX(${flyOut}px) translateY(0) rotate(${deltaX / 8}deg) scale(0.9)`;
       showFeedback(status);
       const success = await voteOutfit(status);
       setTimeout(() => {
@@ -510,17 +588,27 @@ let lastSwipeDirection = 'right'; // default for first load
           updatePreview();
         } else {
           // Reset
-          outfitCard.style.transform = 'translateX(0) rotate(0deg) scale(1)';
+          outfitCard.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
           feedbackText.textContent = 'ERROR!';
           setTimeout(() => {
             swipeFeedback.classList.remove('opacity-100');
           }, 1500);
         }
       }, 400);
+    } else if (absDeltaY > absDeltaX && deltaY < -threshold) {
+      // Vertical up swipe (skip)
+      lastSwipeDirection = 'up';
+      const flyOut = -1.5 * window.innerHeight;
+      outfitCard.style.transform = `translateX(0) translateY(${flyOut}px) rotate(${deltaY / 8}deg) scale(0.9)`;
+      showFeedback('skipped');
+      setTimeout(() => {
+        currentIndex++;
+        updatePreview();
+      }, 400);
     } else {
-      outfitCard.style.transform = 'translateX(0) rotate(0deg) scale(1)';
-      addLabel.classList.add('opacity-0');
-      nahLabel.classList.add('opacity-0');
+      outfitCard.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
+      updateHorizontalLabels(0);
+      skipLabel.classList.add('opacity-0');
     }
   }, { passive: true });
 
@@ -532,6 +620,8 @@ let lastSwipeDirection = 'right'; // default for first load
     currentY = startY;
     isDragging = true;
     outfitCard.style.transition = 'none';
+    skipSuggestion.classList.add('opacity-0');
+    clearTimeout(inactivityTimer);
     e.preventDefault();
   });
 
@@ -540,11 +630,27 @@ let lastSwipeDirection = 'right'; // default for first load
     currentX = e.clientX;
     currentY = e.clientY;
     const deltaX = currentX - startX;
-    const deltaY = Math.abs(currentY - startY);
-    if (Math.abs(deltaX) > deltaY) {
+    const deltaY = currentY - startY;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+    if (absDeltaX > absDeltaY && absDeltaX > 15) {
+      // Horizontal dominant
       const rotate = deltaX / 15;
-      outfitCard.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
-      updateSwipeLabels(deltaX);
+      outfitCard.style.transform = `translateX(${deltaX}px) translateY(0) rotate(${rotate}deg)`;
+      updateHorizontalLabels(deltaX);
+      skipLabel.classList.add('opacity-0');
+    } else if (absDeltaY > absDeltaX && deltaY < 0 && absDeltaY > 15) {
+      // Vertical up dominant
+      const rotate = deltaY / 20;
+      outfitCard.style.transform = `translateX(0) translateY(${deltaY}px) rotate(${rotate}deg)`;
+      if (deltaY < -60) {
+        skipLabel.classList.remove('opacity-0');
+      } else {
+        skipLabel.classList.add('opacity-0');
+      }
+      updateHorizontalLabels(0);
+    } else {
+      outfitCard.style.transform = 'translateX(0) translateY(0) rotate(0deg)';
     }
   });
 
@@ -552,13 +658,17 @@ let lastSwipeDirection = 'right'; // default for first load
     if (!isDragging) return;
     isDragging = false;
     const deltaX = currentX - startX;
+    const deltaY = currentY - startY;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
     const threshold = 120;
     outfitCard.style.transition = 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)';
-    if (Math.abs(deltaX) > threshold) {
+    if (absDeltaX > absDeltaY && absDeltaX > threshold) {
+      // Horizontal swipe
       const status = deltaX > 0 ? 'approved' : 'rejected';
       lastSwipeDirection = deltaX > 0 ? 'right' : 'left';
       const flyOut = (deltaX > 0 ? 1.5 : -1.5) * window.innerWidth;
-      outfitCard.style.transform = `translateX(${flyOut}px) rotate(${deltaX / 8}deg) scale(0.9)`;
+      outfitCard.style.transform = `translateX(${flyOut}px) translateY(0) rotate(${deltaX / 8}deg) scale(0.9)`;
       showFeedback(status);
       const success = await voteOutfit(status);
       setTimeout(() => {
@@ -566,17 +676,27 @@ let lastSwipeDirection = 'right'; // default for first load
           currentIndex++;
           updatePreview();
         } else {
-          outfitCard.style.transform = 'translateX(0) rotate(0deg) scale(1)';
+          outfitCard.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
           feedbackText.textContent = 'ERROR!';
           setTimeout(() => {
             swipeFeedback.classList.remove('opacity-100');
           }, 1500);
         }
       }, 400);
+    } else if (absDeltaY > absDeltaX && deltaY < -threshold) {
+      // Vertical up swipe (skip)
+      lastSwipeDirection = 'up';
+      const flyOut = -1.5 * window.innerHeight;
+      outfitCard.style.transform = `translateX(0) translateY(${flyOut}px) rotate(${deltaY / 8}deg) scale(0.9)`;
+      showFeedback('skipped');
+      setTimeout(() => {
+        currentIndex++;
+        updatePreview();
+      }, 400);
     } else {
-      outfitCard.style.transform = 'translateX(0) rotate(0deg) scale(1)';
-      addLabel.classList.add('opacity-0');
-      nahLabel.classList.add('opacity-0');
+      outfitCard.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
+      updateHorizontalLabels(0);
+      skipLabel.classList.add('opacity-0');
     }
   });
 
@@ -585,9 +705,9 @@ let lastSwipeDirection = 'right'; // default for first load
     if (isDragging) {
       isDragging = false;
       outfitCard.style.transition = 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)';
-      outfitCard.style.transform = 'translateX(0) rotate(0deg) scale(1)';
-      addLabel.classList.add('opacity-0');
-      nahLabel.classList.add('opacity-0');
+      outfitCard.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
+      updateHorizontalLabels(0);
+      skipLabel.classList.add('opacity-0');
     }
   });
 
@@ -595,9 +715,9 @@ let lastSwipeDirection = 'right'; // default for first load
     if (isDragging) {
       isDragging = false;
       outfitCard.style.transition = 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)';
-      outfitCard.style.transform = 'translateX(0) rotate(0deg) scale(1)';
-      addLabel.classList.add('opacity-0');
-      nahLabel.classList.add('opacity-0');
+      outfitCard.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
+      updateHorizontalLabels(0);
+      skipLabel.classList.add('opacity-0');
     }
   });
 
