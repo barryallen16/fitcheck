@@ -6,7 +6,7 @@ import {
 } from '../utils/helpers';
 import api from './apiService';
 
-const DEFAULT_URL = 'http://192.168.29.187:1234';
+const DEFAULT_URL = 'https://barryallen16-fitcheck.hf.space';
 
 function fuzzyMatch(label, wardrobe) {
   if (!label || label === 'N/A') return null;

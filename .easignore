@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Expo & builds
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# generated native folders
+/ios
+/android
+emulator_screenshot.png
+eas-build-log.txt

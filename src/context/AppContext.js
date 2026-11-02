@@ -23,7 +23,7 @@ function newPersona(name, index) {
 export function AppProvider({ children }) {
   const [personas, setPersonas] = useState([]);
   const [activeId, setActiveId] = useState(null);
-  const [serverUrl, _setUrl] = useState('http://192.168.29.187:1234');
+  const [serverUrl, _setUrl] = useState('https://barryallen16-fitcheck.hf.space');
   const [serverOk, setServerOk] = useState(false);
   const [modelName, setModelName] = useState(null);
   const [booting, setBooting] = useState(true);
