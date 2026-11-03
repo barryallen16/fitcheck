@@ -10,7 +10,7 @@ import weather from '../services/weatherService';
 import ErrorBanner from '../components/ErrorBanner';
 import BaseGarmentSelector from '../components/BaseGarmentSelector';
 import { COLORS, TYPE, GAP, RAD } from '../constants/theme';
-import { TOP_CATS, BOTTOM_CATS, FULL_CATS, getSlot, getMaxOutfits, getUnusedCombinations } from '../utils/helpers';
+import { getSlot, getMaxOutfits, getUnusedCombinations, isTop, isBottom, isFullBody, getSlotLabel } from '../utils/helpers';
 
 const LOAD_MSGS = [
   { msg: 'Analyzing Wardrobe', sub: 'Scanning your garments...' },
@@ -19,13 +19,6 @@ const LOAD_MSGS = [
   { msg: 'Weather Check', sub: 'Optimizing for conditions...' },
   { msg: 'Finalizing Look', sub: 'Almost ready...' },
 ];
-
-function getSlotLabel(cat) {
-  if (TOP_CATS.includes(cat)) return 'Top';
-  if (BOTTOM_CATS.includes(cat)) return 'Bottom';
-  if (FULL_CATS.includes(cat)) return 'Full-body';
-  return 'Accessory';
-}
 
 export default function RecommendationScreen({ navigation }) {
   const { wardrobe, outfits, serverOk, isExhausted } =  useApp();
@@ -37,8 +30,8 @@ export default function RecommendationScreen({ navigation }) {
   const intervalRef = useRef(null);
 
   const base = wardrobe.find((g) => g.id === baseId);
-  const topCount = wardrobe.filter((g) => TOP_CATS.includes(g.category) || FULL_CATS.includes(g.category)).length;
-  const botCount = wardrobe.filter((g) => BOTTOM_CATS.includes(g.category)).length;
+  const topCount = wardrobe.filter((g) => isTop(g.category) || isFullBody(g.category)).length;
+  const botCount = wardrobe.filter((g) => isBottom(g.category)).length;
   const maxOutfits = getMaxOutfits(wardrobe);
   const unusedCount = getUnusedCombinations(wardrobe, outfits).length;
   const exhausted = isExhausted();

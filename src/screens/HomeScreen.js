@@ -25,7 +25,7 @@ const blurhash = 'L79i;qIq0yxHoaoLoMWV02%0}@NZ';
     setConnecting(true);
     const r = await setServerUrl(url);
     setConnecting(false);
-    r.ok ? setBanner({ message: `Connected — ${r.model || 'model loaded'}`, type: 'success' }) : setBanner({ message: `Failed: ${r.error}`, type: 'error' });
+    r.ok ? setBanner({ message: `Connected: ${r.model || 'model ready'}`, type: 'success' }) : setBanner({ message: `Failed: ${r.error}`, type: 'error' });
     if (r.ok) setShowCfg(false);
   }
 
@@ -59,7 +59,11 @@ const blurhash = 'L79i;qIq0yxHoaoLoMWV02%0}@NZ';
           <View style={s.statusRow}>
             <View style={[s.dot, { backgroundColor: serverOk ? COLORS.green : COLORS.red }]} />
             <View style={{ flex: 1 }}>
-              <Text style={s.statusTxt}>{serverOk ? 'LM Studio Connected' : 'LM Studio Disconnected'}</Text>
+              <Text style={s.statusTxt}>
+                {serverOk
+                  ? (serverUrl?.includes('hf.space') ? 'FitCheck Cloud Connected' : 'LM Studio Connected')
+                  : (serverUrl?.includes('hf.space') ? 'FitCheck Cloud Disconnected' : 'LM Studio Disconnected')}
+              </Text>
               {serverOk && modelName && <Text style={s.modelTxt} numberOfLines={1}>{modelName}</Text>}
             </View>
             <Ionicons name={showCfg ? 'chevron-up' : 'chevron-down'} size={20} color={COLORS.textDim} />
@@ -68,9 +72,14 @@ const blurhash = 'L79i;qIq0yxHoaoLoMWV02%0}@NZ';
             <View style={s.cfgBox}>
               <Text style={s.cfgLabel}>Server URL</Text>
               <View style={s.urlRow}>
-                <TextInput style={s.urlInput} value={urlDraft} onChangeText={setUrlDraft} placeholder="http://192.168.1.x:1234" placeholderTextColor={COLORS.textMuted} autoCapitalize="none" autoCorrect={false} keyboardType="url" />
+                <TextInput style={s.urlInput} value={urlDraft} onChangeText={setUrlDraft} placeholder="https://barryallen16-fitcheck.hf.space" placeholderTextColor={COLORS.textMuted} autoCapitalize="none" autoCorrect={false} keyboardType="url" />
                 <TouchableOpacity style={[s.connectBtn, connecting && { opacity: 0.5 }]} onPress={handleConnect} disabled={connecting}>
                   <Text style={s.connectTxt}>{connecting ? '...' : 'Go'}</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={{ flexDirection: 'row', gap: GAP.sm, marginTop: GAP.sm }}>
+                <TouchableOpacity onPress={() => { setUrlDraft('https://barryallen16-fitcheck.hf.space'); }} style={{ paddingVertical: 4, paddingHorizontal: 8, backgroundColor: COLORS.cardLight, borderRadius: RAD.sm, borderWidth: 1, borderColor: COLORS.border }}>
+                  <Text style={{ color: COLORS.primary, fontSize: TYPE.xs, fontWeight: '600' }}>Reset to Cloud API</Text>
                 </TouchableOpacity>
               </View>
             </View>

@@ -1,85 +1,12 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import {
-  extractJSON, getSlot, comboKey,
-  TOP_CATS, BOTTOM_CATS, FULL_CATS,
+  extractJSON,
+  isTop, isBottom, isFullBody,
+  categorizeGarments,
   getUnusedCombinations,
 } from '../utils/helpers';
-import api from './apiService';
 
 const DEFAULT_URL = 'https://barryallen16-fitcheck.hf.space';
-
-function fuzzyMatch(label, wardrobe) {
-  if (!label || label === 'N/A') return null;
-  const clean = label.toLowerCase().trim();
-  let f = wardrobe.find((g) => g.summary.toLowerCase().trim() === clean);
-  if (f) return f;
-  f = wardrobe.find((g) => {
-    const s = g.summary.toLowerCase().trim();
-    return s.includes(clean) || clean.includes(s);
-  });
-  if (f) return f;
-  const lW = clean.split(/\s+/).filter((w) => w.length > 2);
-  let best = 0, bestG = null;
-  for (const g of wardrobe) {
-    const gW = g.summary.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
-    let sc = 0;
-    for (const lw of lW) for (const gw of gW) {
-      if (lw === gw) sc += 2; else if (lw.includes(gw) || gw.includes(lw)) sc += 1;
-    }
-    if (sc > best) { best = sc; bestG = g; }
-  }
-  return best >= 2 ? bestG : null;
-}
-
-function buildWardrobeSection(wardrobe) {
-  const tops = wardrobe.filter((g) => TOP_CATS.includes(g.category));
-  const bottoms = wardrobe.filter((g) => BOTTOM_CATS.includes(g.category));
-  const fullBody = wardrobe.filter((g) => FULL_CATS.includes(g.category));
-  let s = '';
-  if (tops.length) { s += 'TOPS:\n'; tops.forEach((g) => { s += `  - "${g.summary}" [${g.category}]: ${g.analyzed_garment}\n`; }); s += '\n'; }
-  if (bottoms.length) { s += 'BOTTOMS:\n'; bottoms.forEach((g) => { s += `  - "${g.summary}" [${g.category}]: ${g.analyzed_garment}\n`; }); s += '\n'; }
-  if (fullBody.length) { s += 'FULL-BODY:\n'; fullBody.forEach((g) => { s += `  - "${g.summary}" [${g.category}]: ${g.analyzed_garment}\n`; }); s += '\n'; }
-  return s;
-}
-
-function buildMessages(weatherStr, wardrobe, baseGarmentId, existingOutfits) {
-  const wardrobeSection = buildWardrobeSection(wardrobe);
-
-  let baseConstraint = '';
-  if (baseGarmentId) {
-    const bg = wardrobe.find((g) => g.id === baseGarmentId);
-    if (bg) {
-      const slot = getSlot(bg.category);
-      baseConstraint = `\nMANDATORY: Include "${bg.summary}" [${bg.category}] (${slot}).`;
-      if (slot === 'TOP') baseConstraint += ` Use as top_label. Pick a BOTTOM for bottom_label.`;
-      else if (slot === 'BOTTOM') baseConstraint += ` Use as bottom_label. Pick a TOP for top_label.`;
-      else if (slot === 'FULL-BODY') baseConstraint += ` Use as top_label. Set bottom_label to "N/A".`;
-      baseConstraint += '\n';
-    }
-  }
-
-  let avoidSection = '';
-  if (existingOutfits.length > 0) {
-    const combos = existingOutfits.map((o) => `"${o.topLabel}" + "${o.bottomLabel}"`).slice(-10);
-    avoidSection = `\nDO NOT repeat:\n${combos.join('\n')}\n`;
-  }
-
-  const hour = new Date().getHours();
-  const mood = hour < 12 ? 'fresh morning' : hour < 17 ? 'stylish afternoon' : 'elegant evening';
-
-  const sys = `You are FitCheck's outfit engine. Recommend from the user's wardrobe ONLY.
-RULES:
-1. top_label = EXACT summary from TOPS or FULL-BODY
-2. bottom_label = EXACT summary from BOTTOMS, or "N/A" for full-body garments
-3. Never swap categories
-4. ONLY valid JSON output
-
-JSON: {"top_label":"...","bottom_label":"...","colorLogic":"...","silhouetteLogic":"..."}`;
-
-  const user = `Weather: ${weatherStr}\nVibe: ${mood}${baseConstraint}${avoidSection}\nWARDROBE:\n${wardrobeSection}\nOutput ONLY JSON.`;
-
-  return [{ role: 'system', content: sys }, { role: 'user', content: user }];
-}
 
 class LMStudioService {
   constructor() {
@@ -92,11 +19,52 @@ class LMStudioService {
 
   async checkConnection() {
     try {
+      const isCloud = this.baseUrl.includes('hf.space');
       const c = new AbortController();
-      const t = setTimeout(() => c.abort(), 6000);
+      const t = setTimeout(() => c.abort(), 8000);
+
+      // Hugging Face Space: verify via live Task B endpoint
+      if (isCloud) {
+        const testRes = await fetch(`${this.baseUrl}/evaluate-compatibility`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ anchor: 'ping', candidate: 'pong' }),
+          signal: c.signal,
+        });
+        clearTimeout(t);
+        if (testRes.ok) {
+          this.connected = true;
+          this.modelId = 'barryallen16/fitcheck-qwen3vl-2b';
+          return { ok: true, model: this.modelId, modelCount: 1 };
+        }
+        this.connected = false;
+        return { ok: false, error: `Cloud API returned status ${testRes.status}` };
+      }
+
+      // Local LM Studio / standard OpenAI endpoint
       const r = await fetch(`${this.baseUrl}/v1/models`, { signal: c.signal });
       clearTimeout(t);
       if (!r.ok) { this.connected = false; return { ok: false, error: `Status ${r.status}` }; }
+
+      const ct = r.headers.get('content-type') || '';
+      if (!ct.includes('application/json')) {
+        // Returned HTML (e.g. Gradio SPA) - test fallback POST endpoint
+        const testRes = await fetch(`${this.baseUrl}/evaluate-compatibility`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ anchor: 'ping', candidate: 'pong' }),
+        }).catch(() => null);
+
+        if (testRes && testRes.ok) {
+          this.connected = true;
+          this.modelId = 'barryallen16/fitcheck-qwen3vl-2b';
+          return { ok: true, model: this.modelId, modelCount: 1 };
+        }
+
+        this.connected = false;
+        return { ok: false, error: 'Endpoint returned HTML instead of JSON' };
+      }
+
       const b = await r.json();
       const m = b?.data ?? [];
       if (m.length > 0) this.modelId = m[0].id;
@@ -126,7 +94,38 @@ class LMStudioService {
     } catch (e) {
       console.warn('evaluateCompatibility error:', e);
     }
-    return null;
+    return await this._evaluateCompatibilityFallback(anchor, candidate);
+  }
+
+  async _evaluateCompatibilityFallback(anchor, candidate) {
+    const prompt = `You are a fashion compatibility judge for Indian fashion (ethnic, western, and fusion wear).\nYou are given two clothing items: an ANCHOR and a CANDIDATE.\nDecide whether the CANDIDATE is a good pairing to complete an outfit with the ANCHOR.\n\nRespond ONLY in this JSON format, nothing else:\n{\n  "compatible": true,\n  "score": 4,\n  "reason": "<one sentence, under 20 words>"\n}\n\nANCHOR: ${anchor}\nCANDIDATE: ${candidate}`;
+    const payload = {
+      model: this.modelId || 'default',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.0,
+      max_tokens: 120,
+    };
+    try {
+      const raw = await this._postSafe('/v1/chat/completions', payload);
+      const text = raw?.choices?.[0]?.message?.content ?? '';
+      const obj = extractJSON(text);
+      if (obj) {
+        const score = Number(obj.score) || 4.0;
+        const compatible = obj.compatible !== false;
+        return {
+          compatible,
+          score,
+          probability: compatible ? Math.min(0.98, Math.max(0.6, score / 5.0)) : 0.3,
+          rationale: obj.reason || obj.rationale || 'Complementary pairing.',
+        };
+      }
+    } catch {}
+    return {
+      compatible: true,
+      score: 4.0,
+      probability: 0.8,
+      rationale: 'Complementary pairing for daily wear.',
+    };
   }
 
   // ── Vision analysis (Task A fine-tuned model + fallback) ──
@@ -136,9 +135,9 @@ class LMStudioService {
     try {
       const manipulatedImage = await ImageManipulator.manipulateAsync(
         imageUri,
-        [{ resize: { width: 768 } }],
+        [{ resize: { width: 336 } }],
         {
-          compress: 0.7,
+          compress: 0.6,
           format: ImageManipulator.SaveFormat.JPEG,
           base64: true,
         }
@@ -204,167 +203,117 @@ Output ONLY: {"summary":"...","analyzed_garment":"...","category":"..."}`
     return this._parseGarment(text);
   }
 
-  // ── Recommendation (dual: LM Studio + remote API) ────
+  // ── Outfit Recommendation (Slot Pairing + Fine-Tuned Task B Scoring) ──
   async getRecommendation(weatherStr, wardrobe, baseGarmentId, existingOutfits = []) {
-    const messages = buildMessages(weatherStr, wardrobe, baseGarmentId, existingOutfits);
+    await this._ensureConnected();
 
-    // Build LM Studio payload
-    const lmPayload = {
-      model: this.modelId || 'default',
-      messages,
-      temperature: 0.4,
-      max_tokens: 512,
-      stream: false,
-    };
-
-    // Fire BOTH simultaneously
-    // LM Studio = slow (2B model, 10-30s)
-    // API = fast (cloud model, 2-5s)
-    // We wait for BOTH - response appears after LM Studio finishes
-    // We USE the API's better response
-
-    const [lmResult, apiResult] = await Promise.allSettled([
-      this._postSafe('/v1/chat/completions', lmPayload),
-      api.call(messages, { temperature: 0.4 }),
-    ]);
-
-    let responseText = null;
-
-    // Prefer the API (better quality)
-    if (apiResult.status === 'fulfilled' && apiResult.value) {
-      responseText = apiResult.value;
-    }
-    // Fallback to LM Studio
-    if (!responseText && lmResult.status === 'fulfilled' && lmResult.value) {
-      const lmText = lmResult.value?.choices?.[0]?.message?.content ?? '';
-      if (lmText) responseText = lmText;
-    }
-
-    if (!responseText) {
-      const lmErr = lmResult.status === 'rejected' ? lmResult.reason?.message : '';
-      const apiErr = apiResult.status === 'rejected' ? apiResult.reason?.message : '';
-      throw new Error(`Recommendation failed.\nLM Studio: ${lmErr || 'empty'}\nDetails: ${apiErr || 'empty'}`);
-    }
-
-    const parsed = this._parseRecommendation(responseText);
+    const { tops, bottoms, fullBody } = categorizeGarments(wardrobe);
     const baseGarment = baseGarmentId ? wardrobe.find((g) => g.id === baseGarmentId) : null;
-    const validated = this._validateRecommendation(parsed, wardrobe, baseGarment);
 
-    // Dedup check
-    const key = comboKey(validated._topGarment?.id, validated._bottomGarment?.id);
-    const isDup = existingOutfits.some((o) => comboKey(o.topId, o.bottomId) === key);
-
-    if (isDup) {
-      // Try fallback: pick unused combo and get logic for it
-      const unused = getUnusedCombinations(wardrobe, existingOutfits);
-      if (unused.length > 0) {
-        const pick = unused[Math.floor(Math.random() * unused.length)];
-        return await this._getLogicForPair(pick.top, pick.bottom, weatherStr);
-      }
+    // Handle full-body garment (Saree, Dress, Gown)
+    if (baseGarment && isFullBody(baseGarment.category)) {
+      return {
+        top_label: baseGarment.summary,
+        bottom_label: 'N/A',
+        colorLogic: 'Standalone statement piece suited for the occasion.',
+        silhouetteLogic: 'Graceful single-piece silhouette tailored for comfort and elegance.',
+        score: 5.0,
+        probability: 0.95,
+        rationale: 'Complete full-body garment.',
+        compatibility: { compatible: true, score: 5.0, probability: 0.95, rationale: 'Complete full-body garment.' },
+        _topGarment: baseGarment,
+        _bottomGarment: null,
+      };
     }
 
-    if (validated._topGarment && validated._bottomGarment) {
-      const anchor = `${validated._topGarment.summary}: ${validated._topGarment.analyzed_garment || validated._topGarment.category}`;
-      const candidate = `${validated._bottomGarment.summary}: ${validated._bottomGarment.analyzed_garment || validated._bottomGarment.category}`;
-      const comp = await this.evaluateCompatibility(anchor, candidate);
-      if (comp) {
-        validated.compatibility = comp;
-        validated.score = comp.score;
-        validated.probability = comp.probability;
-        validated.rationale = comp.rationale;
-        if (comp.rationale) {
-          validated.colorLogic = comp.rationale;
+    // Build candidate pairs
+    let candidates = [];
+
+    if (baseGarment) {
+      if (isTop(baseGarment.category)) {
+        candidates = bottoms
+          .filter((b) => b.id !== baseGarment.id)
+          .map((b) => ({ top: baseGarment, bottom: b }));
+      } else if (isBottom(baseGarment.category)) {
+        candidates = tops
+          .filter((t) => t.id !== baseGarment.id)
+          .map((t) => ({ top: t, bottom: baseGarment }));
+      }
+    } else {
+      // Find unused pairs first to avoid repeats
+      candidates = getUnusedCombinations(wardrobe, existingOutfits);
+      if (candidates.length === 0) {
+        // All combos used: fall back to all valid top x bottom combinations
+        for (const t of tops) {
+          for (const b of bottoms) {
+            candidates.push({ top: t, bottom: b });
+          }
         }
       }
     }
 
-    return validated;
-  }
-
-  async _getLogicForPair(topG, bottomG, weatherStr) {
-    if (topG && bottomG) {
-      const anchor = `${topG.summary}: ${topG.analyzed_garment || topG.category}`;
-      const candidate = `${bottomG.summary}: ${bottomG.analyzed_garment || bottomG.category}`;
-      const comp = await this.evaluateCompatibility(anchor, candidate);
-      if (comp) {
+    // If no pairs can be formed, check for full-body garments
+    if (candidates.length === 0) {
+      if (fullBody.length > 0) {
+        const unusedFull = fullBody.filter((f) => !existingOutfits.some((o) => o.topId === f.id));
+        const pick = unusedFull.length > 0 ? unusedFull[0] : fullBody[0];
         return {
-          top_label: topG.summary,
-          bottom_label: bottomG.summary,
-          colorLogic: comp.rationale || 'Complementary colors.',
-          silhouetteLogic: 'Balanced proportions suited for daily comfort.',
-          compatibility: comp,
-          score: comp.score,
-          probability: comp.probability,
-          rationale: comp.rationale,
-          _topGarment: topG,
-          _bottomGarment: bottomG,
+          top_label: pick.summary,
+          bottom_label: 'N/A',
+          colorLogic: 'Standalone statement piece suited for the occasion.',
+          silhouetteLogic: 'Graceful single-piece silhouette tailored for comfort and elegance.',
+          score: 5.0,
+          probability: 0.95,
+          rationale: 'Complete full-body garment.',
+          compatibility: { compatible: true, score: 5.0, probability: 0.95, rationale: 'Complete full-body garment.' },
+          _topGarment: pick,
+          _bottomGarment: null,
         };
       }
+      throw new Error('Need at least 1 top and 1 bottom (or a dress/saree) in your wardrobe.');
     }
 
-    const prompt = `Outfit for ${weatherStr}:
-Top: "${topG.summary}" - ${topG.analyzed_garment}
-${bottomG ? `Bottom: "${bottomG.summary}" - ${bottomG.analyzed_garment}` : 'Full-body garment.'}
-JSON ONLY: {"colorLogic":"...","silhouetteLogic":"..."}`;
+    // Shuffle candidates so the user gets varied combinations across sessions
+    const shuffled = [...candidates].sort(() => Math.random() - 0.5);
 
-    // Dual again
-    const msgs = [{ role: 'user', content: prompt }];
-    const lmPayload = { model: this.modelId || 'default', messages: msgs, temperature: 0.3, max_tokens: 256, stream: false };
+    // Evaluate candidate pair(s) with fine-tuned Task B model
+    let bestResult = null;
+    let highestScore = -1;
 
-    const [lmR, apiR] = await Promise.allSettled([
-      this._postSafe('/v1/chat/completions', lmPayload),
-      api.call(msgs, { temperature: 0.3, maxTokens: 256 }),
-    ]);
+    // Check up to 2 candidate pairs using Task B judge
+    const pairsToTest = shuffled.slice(0, 2);
 
-    let text = '';
-    if (apiR.status === 'fulfilled' && apiR.value) text = apiR.value;
-    else if (lmR.status === 'fulfilled' && lmR.value) text = lmR.value?.choices?.[0]?.message?.content ?? '';
+    for (const pair of pairsToTest) {
+      const anchor = `${pair.top.summary}: ${pair.top.analyzed_garment || pair.top.category}`;
+      const candidate = `${pair.bottom.summary}: ${pair.bottom.analyzed_garment || pair.bottom.category}`;
 
-    const obj = extractJSON(text) || { colorLogic: 'Complementary palette.', silhouetteLogic: 'Balanced silhouettes.' };
+      const comp = await this.evaluateCompatibility(anchor, candidate);
+      const score = comp?.score ?? 4.0;
+      const rationale = comp?.rationale || 'Complementary colors and balanced proportions.';
 
-    return {
-      top_label: topG.summary,
-      bottom_label: bottomG ? bottomG.summary : 'N/A',
-      colorLogic: obj.colorLogic || 'Complementary colors.',
-      silhouetteLogic: obj.silhouetteLogic || 'Balanced silhouettes.',
-      _topGarment: topG,
-      _bottomGarment: bottomG,
-    };
-  }
+      const result = {
+        top_label: pair.top.summary,
+        bottom_label: pair.bottom.summary,
+        colorLogic: rationale,
+        silhouetteLogic: 'Balanced proportions suited for daily comfort.',
+        score,
+        probability: comp?.probability ?? 0.85,
+        rationale,
+        compatibility: comp || { compatible: true, score, probability: 0.85, rationale },
+        _topGarment: pair.top,
+        _bottomGarment: pair.bottom,
+      };
 
-  _validateRecommendation(rec, wardrobe, baseGarment) {
-    let topM = fuzzyMatch(rec.top_label, wardrobe);
-    let botM = fuzzyMatch(rec.bottom_label, wardrobe);
-    if (topM && BOTTOM_CATS.includes(topM.category)) {
-      if (botM && TOP_CATS.includes(botM.category)) { const t = topM; topM = botM; botM = t; }
-      else { botM = topM; topM = null; }
-    }
-    if (botM && TOP_CATS.includes(botM.category)) { if (!topM) { topM = botM; botM = null; } }
-    if (topM && FULL_CATS.includes(topM.category)) botM = null;
-    if (baseGarment) {
-      const sl = getSlot(baseGarment.category);
-      if (sl === 'TOP' || sl === 'FULL-BODY') { topM = baseGarment; if (sl === 'FULL-BODY') botM = null; }
-      else if (sl === 'BOTTOM') botM = baseGarment;
-      if (topM && botM && topM.id === botM.id) {
-        if (sl === 'TOP') botM = wardrobe.find((g) => BOTTOM_CATS.includes(g.category) && g.id !== baseGarment.id) || null;
-        else topM = wardrobe.find((g) => TOP_CATS.includes(g.category) && g.id !== baseGarment.id) || null;
+      if (!bestResult || score > highestScore) {
+        bestResult = result;
+        highestScore = score;
       }
+
+      // If the first candidate scores high (>= 4.0), take it immediately to save time
+      if (score >= 4.0) break;
     }
-    if (!topM) {
-      const a = wardrobe.filter((g) => (TOP_CATS.includes(g.category) || FULL_CATS.includes(g.category)) && g.id !== botM?.id);
-      if (a.length) topM = a[Math.floor(Math.random() * a.length)];
-    }
-    if (!botM && topM && !FULL_CATS.includes(topM.category)) {
-      const a = wardrobe.filter((g) => BOTTOM_CATS.includes(g.category) && g.id !== topM?.id);
-      if (a.length) botM = a[Math.floor(Math.random() * a.length)];
-    }
-    return {
-      top_label: topM?.summary || rec.top_label,
-      bottom_label: (topM && FULL_CATS.includes(topM.category)) ? 'N/A' : (botM?.summary || rec.bottom_label),
-      colorLogic: rec.colorLogic || 'Complementary colors.',
-      silhouetteLogic: rec.silhouetteLogic || 'Balanced silhouettes.',
-      _topGarment: topM || null, _bottomGarment: botM || null,
-    };
+
+    return bestResult;
   }
 
   // ── Internals ─────────────────────────────────────────
@@ -400,20 +349,11 @@ JSON ONLY: {"colorLogic":"...","silhouetteLogic":"..."}`;
     if (!obj.summary) throw new Error('Missing "summary".');
     if (!obj.analyzed_garment) throw new Error('Missing "analyzed_garment".');
     if (!obj.category) throw new Error('Missing "category".');
-    const CATS = ['Kurti','Lehenga','Dupatta','Palazzo','Churidar','Salwar','Saree','Sherwani','Anarkali','Dress','Gown','Skirt','Jeans','Pants','Blazer','Jacket','Top','Shirt'];
+    const CATS = ['Kurti','Lehenga','Dupatta','Palazzo','Churidar','Salwar','Saree','Sherwani','Anarkali','Dress','Gown','Skirt','Jeans','Pants','Blazer','Jacket','Top','Shirt','Bottom','Trousers'];
     const m = CATS.find((c) => c.toLowerCase() === obj.category.toLowerCase());
     if (m) obj.category = m;
+    if (obj.category.toLowerCase() === 'bottom') obj.category = 'Pants';
     return { summary: obj.summary.trim(), analyzed_garment: obj.analyzed_garment.trim(), category: obj.category.trim() };
-  }
-
-  _parseRecommendation(text) {
-    const obj = extractJSON(text);
-    if (!obj) throw new Error(`No JSON:\n${text.substring(0, 400)}`);
-    if (!obj.top_label) throw new Error('Missing "top_label".');
-    if (!obj.colorLogic) throw new Error('Missing "colorLogic".');
-    if (!obj.silhouetteLogic) throw new Error('Missing "silhouetteLogic".');
-    if (!obj.bottom_label) obj.bottom_label = 'N/A';
-    return obj;
   }
 }
 

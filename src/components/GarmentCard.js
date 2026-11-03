@@ -7,8 +7,8 @@ const CAT_CLR = {
   Kurti:'#FF8A65', Lehenga:'#CE93D8', Dupatta:'#80CBC4', Palazzo:'#90CAF9',
   Churidar:'#A5D6A7', Salwar:'#FFE082', Saree:'#EF5350', Sherwani:'#7986CB',
   Anarkali:'#F48FB1', Dress:'#80DEEA', Gown:'#B39DDB', Skirt:'#FFAB91',
-  Jeans:'#64B5F6', Pants:'#81C784', Blazer:'#FFD54F', Jacket:'#4DD0E1',
-  Top:'#FF8A80', Shirt:'#82B1FF',
+  Jeans:'#64B5F6', Pants:'#81C784', Bottom:'#81C784', Trousers:'#81C784',
+  Blazer:'#FFD54F', Jacket:'#4DD0E1', Top:'#FF8A80', 'T-Shirt':'#FF8A80', Shirt:'#82B1FF',
 };
 
 export default function GarmentCard({ garment, onPress, onDelete, isSelected, selectable }) {
