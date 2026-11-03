@@ -12,7 +12,7 @@ const W = Dimensions.get('window').width;
 
 export default function OutfitDetailScreen({ route, navigation }) {
   const { outfitId } = route.params;
-  const { outfits, wardrobe, wearOutfit, unwearOutfit, fullBodyPhoto } = useApp();
+  const { outfits, wardrobe, wearOutfit, unwearOutfit } = useApp();
 
   const outfit = outfits.find((o) => o.id === outfitId);
   const topG = wardrobe.find((g) => g.id === outfit?.topId);
@@ -69,14 +69,6 @@ export default function OutfitDetailScreen({ route, navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        {/* Try-on image if exists */}
-        {outfit.tryOnImageUri && (
-          <View style={s.tryOnSection}>
-            <Text style={s.secLabel}>Virtual Try-On</Text>
-            <Image source={{ uri: outfit.tryOnImageUri }} style={s.tryOnImg} resizeMode="contain" />
-          </View>
-        )}
-
         {/* Weather */}
         <View style={s.weatherCard}>
           <Ionicons name="partly-sunny" size={22} color={COLORS.primary} />
@@ -96,6 +88,23 @@ export default function OutfitDetailScreen({ route, navigation }) {
         <Text style={s.secLabel}>Outfit</Text>
         <Piece label={outfit.topLabel} garment={topG} title="Top / Upper" />
         <Piece label={outfit.bottomLabel} garment={botG} title="Bottom / Lower" />
+
+        {outfit.score && (
+          <View style={s.compatCard}>
+            <View style={s.compatHdr}>
+              <View style={s.compatTitleRow}>
+                <Ionicons name="shield-checkmark" size={16} color={COLORS.primary} />
+                <Text style={s.compatTitle}>Task B Model Compatibility</Text>
+              </View>
+              <View style={s.compatBadge}>
+                <Text style={s.compatBadgeTxt}>
+                  {Math.round((outfit.probability || (outfit.score / 5)) * 100)}% Match
+                </Text>
+              </View>
+            </View>
+            {outfit.rationale ? <Text style={s.compatRationale}>{outfit.rationale}</Text> : null}
+          </View>
+        )}
 
         {/* Logic */}
         <View style={s.logicCard}>
@@ -117,25 +126,6 @@ export default function OutfitDetailScreen({ route, navigation }) {
         </View>
 
         {/* Actions */}
-        {topG && (
-          <TouchableOpacity
-            style={s.tryOnBtn}
-            onPress={() => navigation.navigate('TryOn', { outfitId: outfit.id })}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="person-outline" size={22} color={COLORS.bg} />
-            <View style={{ flex: 1 }}>
-              <Text style={s.tryOnBtnTxt}>
-                {outfit.tryOnImageUri ? 'View / Redo Try-On' : 'Virtual Try-On'}
-              </Text>
-              <Text style={s.tryOnBtnSub}>
-                {fullBodyPhoto ? 'See how this looks on you' : 'Add body photo in Me tab first'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.bg} />
-          </TouchableOpacity>
-        )}
-
         <TouchableOpacity
           style={[s.wearBtn, isWorn && s.wornBtn]}
           onPress={() => isWorn ? unwearOutfit(outfit.id) : wearOutfit(outfit.id, todayStr())}
@@ -170,9 +160,6 @@ const s = StyleSheet.create({
 
   secLabel: { color: COLORS.textDim, fontSize: TYPE.xs, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: GAP.md },
 
-  tryOnSection: { marginBottom: GAP.xl },
-  tryOnImg: { width: W - GAP.xl * 2, height: (W - GAP.xl * 2) * 1.33, borderRadius: RAD.lg, backgroundColor: COLORS.cardLight },
-
   weatherCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: RAD.lg, padding: GAP.lg, marginBottom: GAP.xl, borderWidth: 1, borderColor: COLORS.border },
   weatherMain: { color: COLORS.text, fontSize: TYPE.base, fontWeight: '600' },
   weatherCity: { color: COLORS.textDim, fontSize: TYPE.xs, marginTop: 2 },
@@ -188,6 +175,13 @@ const s = StyleSheet.create({
   pieceDesc: { color: COLORS.textDim, fontSize: TYPE.xs, marginTop: GAP.xs, lineHeight: 16 },
   noMatch: { flex: 1, alignItems: 'center', paddingVertical: GAP.md, gap: GAP.xs },
   noMatchTxt: { color: COLORS.text, fontSize: TYPE.base, fontWeight: '600' },
+  compatCard: { backgroundColor: COLORS.primaryGlow, borderRadius: RAD.lg, padding: GAP.lg, marginBottom: GAP.lg, borderWidth: 1, borderColor: COLORS.primaryMuted },
+  compatHdr: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: GAP.sm },
+  compatTitleRow: { flexDirection: 'row', alignItems: 'center', gap: GAP.xs },
+  compatTitle: { color: COLORS.text, fontSize: TYPE.sm, fontWeight: '700' },
+  compatBadge: { backgroundColor: COLORS.primary, paddingHorizontal: GAP.sm, paddingVertical: 2, borderRadius: RAD.full },
+  compatBadgeTxt: { color: COLORS.bg, fontSize: TYPE.xs, fontWeight: '700' },
+  compatRationale: { color: COLORS.text, fontSize: TYPE.sm, lineHeight: 20 },
 
   logicCard: { backgroundColor: COLORS.card, borderRadius: RAD.lg, padding: GAP.xl, marginBottom: GAP.xl, borderWidth: 1, borderColor: COLORS.border },
   logicSec: { marginVertical: GAP.sm },
@@ -195,10 +189,6 @@ const s = StyleSheet.create({
   logicTitle: { color: COLORS.text, fontSize: TYPE.base, fontWeight: '700' },
   logicBody: { color: COLORS.textDim, fontSize: TYPE.sm, lineHeight: 22 },
   logicDiv: { height: 1, backgroundColor: COLORS.border, marginVertical: GAP.md },
-
-  tryOnBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.accent, borderRadius: RAD.lg, padding: GAP.lg, gap: GAP.md, marginBottom: GAP.md },
-  tryOnBtnTxt: { color: COLORS.bg, fontSize: TYPE.base, fontWeight: '700' },
-  tryOnBtnSub: { color: COLORS.bg, fontSize: TYPE.xs, opacity: 0.7, marginTop: 1 },
 
   wearBtn: { flexDirection: 'row', backgroundColor: COLORS.green, borderRadius: RAD.lg, paddingVertical: GAP.lg, justifyContent: 'center', alignItems: 'center', gap: GAP.sm, marginBottom: GAP.lg },
   wornBtn: { backgroundColor: COLORS.orange + '15', borderWidth: 1, borderColor: COLORS.orange + '40' },

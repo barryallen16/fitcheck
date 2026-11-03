@@ -136,8 +136,8 @@ export function AppProvider({ children }) {
       topLabel: data.topLabel, bottomLabel: data.bottomLabel,
       colorLogic: data.colorLogic, silhouetteLogic: data.silhouetteLogic,
       weather: data.weather, weatherCity: data.weatherCity || '',
+      score: data.score || null, probability: data.probability || null, rationale: data.rationale || null,
       createdAt: new Date().toISOString(), status: 'unworn', wornDate: null,
-      tryOnImageUri: null,
     };
     _update((p) => ({ ...p, outfits: [...p.outfits, o] }));
     return o;
@@ -156,17 +156,7 @@ export function AppProvider({ children }) {
   }, [activeId]);
 
   const deleteOutfit = useCallback((id) => {
-    _update((p) => {
-      const o = p.outfits.find((x) => x.id === id);
-      if (o?.tryOnImageUri) deleteImage(o.tryOnImageUri);
-      return { ...p, outfits: p.outfits.filter((x) => x.id !== id) };
-    });
-  }, [activeId]);
-
-  const setOutfitTryOn = useCallback((outfitId, imageUri) => {
-    _update((p) => ({
-      ...p, outfits: p.outfits.map((o) => o.id === outfitId ? { ...o, tryOnImageUri: imageUri } : o),
-    }));
+    _update((p) => ({ ...p, outfits: p.outfits.filter((x) => x.id !== id) }));
   }, [activeId]);
 
   const wardrobe = active?.wardrobe || [];
@@ -188,7 +178,7 @@ export function AppProvider({ children }) {
       serverUrl, serverOk, modelName, booting, setServerUrl, ping,
       wardrobe, outfits, fullBodyPhoto, gender,
       setFullBodyPhoto, setGender, addGarment, removeGarment, clearWardrobe,
-      addOutfit, wearOutfit, unwearOutfit, deleteOutfit, setOutfitTryOn,
+      addOutfit, wearOutfit, unwearOutfit, deleteOutfit,
       isExhausted, outfitsForDate,
     }}>
       {children}

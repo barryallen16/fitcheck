@@ -14,8 +14,6 @@ export default function ProfileScreen({ navigation }) {
   const { active, fullBodyPhoto, setFullBodyPhoto, gender, setGender, outfits, wardrobe } = useApp();
   const [banner, setBanner] = useState(null);
 
-  const tryOnOutfits = (outfits || []).filter((o) => o.tryOnImageUri);
-
   async function pickPhoto() {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -56,12 +54,11 @@ export default function ProfileScreen({ navigation }) {
           <View style={s.stat}><Text style={s.statNum}>{garmentCount}</Text><Text style={s.statLbl}>Garments</Text></View>
           <View style={s.stat}><Text style={s.statNum}>{(outfits || []).length}</Text><Text style={s.statLbl}>Outfits</Text></View>
           <View style={s.stat}><Text style={s.statNum}>{wornCount}</Text><Text style={s.statLbl}>Worn</Text></View>
-          <View style={s.stat}><Text style={s.statNum}>{tryOnOutfits.length}</Text><Text style={s.statLbl}>Try-Ons</Text></View>
         </View>
 
         {/* ─── Gender Selection ─────────────────────── */}
         <Text style={s.secLabel}>Gender</Text>
-        <Text style={s.secHint}>Helps generate accurate virtual try-on results</Text>
+        <Text style={s.secHint}>Helps tailor recommendations to your style</Text>
 
         <View style={s.genderRow}>
           <TouchableOpacity
@@ -108,13 +105,13 @@ export default function ProfileScreen({ navigation }) {
         {!gender && (
           <View style={s.genderWarn}>
             <Ionicons name="warning-outline" size={16} color={COLORS.orange} />
-            <Text style={s.genderWarnTxt}>Please select your gender for better try-on results</Text>
+            <Text style={s.genderWarnTxt}>Please select your gender for tailored recommendations</Text>
           </View>
         )}
 
         {/* ─── Full Body Photo ──────────────────────── */}
-        <Text style={[s.secLabel, { marginTop: GAP.xl }]}>Full-Body Photo</Text>
-        <Text style={s.secHint}>Used for virtual try-on</Text>
+        <Text style={[s.secLabel, { marginTop: GAP.xl }]}>Profile Photo</Text>
+        <Text style={s.secHint}>Personalize your profile</Text>
 
         {fullBodyPhoto ? (
           <View style={s.photoWrap}>
@@ -141,40 +138,6 @@ export default function ProfileScreen({ navigation }) {
               <Text style={s.uploadTxt}>Camera</Text>
             </TouchableOpacity>
           </View>
-        )}
-
-        {/* ─── Try-On Gallery ───────────────────────── */}
-        {tryOnOutfits.length > 0 && (
-          <>
-            <Text style={[s.secLabel, { marginTop: GAP.xl }]}>Try-On Gallery</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: GAP.sm, paddingBottom: GAP.md }}
-            >
-              {tryOnOutfits.map((o) => {
-                const topG = (wardrobe || []).find((g) => g.id === o.topId);
-                return (
-                  <TouchableOpacity
-                    key={o.id}
-                    style={s.tryOnThumb}
-                    onPress={() => {
-                      navigation.getParent()?.navigate?.('Style', {
-                        screen: 'OutfitDetail',
-                        params: { outfitId: o.id },
-                      });
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Image source={{ uri: o.tryOnImageUri }} style={s.tryOnImg} />
-                    <Text style={s.tryOnLabel} numberOfLines={1}>
-                      {topG?.summary || o.topLabel}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </>
         )}
 
         {/* Info */}
@@ -259,11 +222,6 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: COLORS.primaryMuted, borderStyle: 'dashed',
   },
   uploadTxt: { color: COLORS.primary, fontSize: TYPE.sm, fontWeight: '600' },
-
-  // Try-On Gallery
-  tryOnThumb: { alignItems: 'center', width: 100 },
-  tryOnImg: { width: 90, height: 120, borderRadius: RAD.md, backgroundColor: COLORS.cardLight },
-  tryOnLabel: { color: COLORS.textDim, fontSize: TYPE.xs, marginTop: GAP.xs, textAlign: 'center' },
 
   infoCard: {
     flexDirection: 'row', gap: GAP.sm, backgroundColor: COLORS.card,

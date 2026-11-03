@@ -8,7 +8,7 @@ import { todayStr } from '../utils/helpers';
 
 export default function ResultScreen({ route, navigation }) {
   const { recommendation: rec, weather: w, wardrobe } = route.params;
-  const { addOutfit, wearOutfit, fullBodyPhoto } = useApp();
+  const { addOutfit, wearOutfit } = useApp();
   const savedRef = useRef(false);
   const [outfitId, setOutfitId] = useState(null);
   const [worn, setWorn] = useState(false);
@@ -24,6 +24,9 @@ export default function ResultScreen({ route, navigation }) {
         topLabel: rec.top_label, bottomLabel: rec.bottom_label,
         colorLogic: rec.colorLogic, silhouetteLogic: rec.silhouetteLogic,
         weather: w.formatted, weatherCity: w.city,
+        score: rec.score || null,
+        probability: rec.probability || null,
+        rationale: rec.rationale || null,
       });
       setOutfitId(o.id);
     }
@@ -86,6 +89,23 @@ export default function ResultScreen({ route, navigation }) {
         <Piece label={rec.top_label} garment={topG} title="Top / Upper" />
         <Piece label={rec.bottom_label} garment={botG} title="Bottom / Lower" />
 
+        {rec.compatibility && (
+          <View style={s.compatCard}>
+            <View style={s.compatHdr}>
+              <View style={s.compatTitleRow}>
+                <Ionicons name="shield-checkmark" size={16} color={COLORS.primary} />
+                <Text style={s.compatTitle}>Task B Model Compatibility</Text>
+              </View>
+              <View style={s.compatBadge}>
+                <Text style={s.compatBadgeTxt}>
+                  {Math.round((rec.probability || (rec.score / 5)) * 100)}% Match
+                </Text>
+              </View>
+            </View>
+            <Text style={s.compatRationale}>{rec.rationale || rec.compatibility.rationale}</Text>
+          </View>
+        )}
+
         <View style={s.logicCard}>
           <View style={s.logicSec}>
             <View style={s.logicHdr}><Ionicons name="color-palette-outline" size={18} color={COLORS.primary} /><Text style={s.logicTitle}>Color Logic</Text></View>
@@ -97,24 +117,6 @@ export default function ResultScreen({ route, navigation }) {
             <Text style={s.logicBody}>{rec.silhouetteLogic}</Text>
           </View>
         </View>
-
-        {/* Virtual Try-On */}
-        {topG && outfitId && (
-          <TouchableOpacity
-            style={s.tryOnBtn}
-            onPress={() => navigation.navigate('TryOn', { outfitId })}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="person-outline" size={22} color={COLORS.bg} />
-            <View style={{ flex: 1 }}>
-              <Text style={s.tryOnTxt}>Virtual Try-On</Text>
-              <Text style={s.tryOnSub}>
-                {fullBodyPhoto ? 'See how this looks on you' : 'Add body photo in Me tab first'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.bg} />
-          </TouchableOpacity>
-        )}
 
         {/* Wear */}
         <TouchableOpacity
@@ -165,15 +167,19 @@ const s = StyleSheet.create({
   pieceDesc: { color: COLORS.textDim, fontSize: TYPE.xs, marginTop: GAP.xs, lineHeight: 16 },
   noMatch: { flex: 1, alignItems: 'center', paddingVertical: GAP.md },
   noMatchTxt: { color: COLORS.text, fontSize: TYPE.base, fontWeight: '600' },
+  compatCard: { backgroundColor: COLORS.primaryGlow, borderRadius: RAD.lg, padding: GAP.lg, marginBottom: GAP.lg, borderWidth: 1, borderColor: COLORS.primaryMuted },
+  compatHdr: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: GAP.sm },
+  compatTitleRow: { flexDirection: 'row', alignItems: 'center', gap: GAP.xs },
+  compatTitle: { color: COLORS.text, fontSize: TYPE.sm, fontWeight: '700' },
+  compatBadge: { backgroundColor: COLORS.primary, paddingHorizontal: GAP.sm, paddingVertical: 2, borderRadius: RAD.full },
+  compatBadgeTxt: { color: COLORS.bg, fontSize: TYPE.xs, fontWeight: '700' },
+  compatRationale: { color: COLORS.text, fontSize: TYPE.sm, lineHeight: 20 },
   logicCard: { backgroundColor: COLORS.card, borderRadius: RAD.lg, padding: GAP.xl, marginBottom: GAP.xl, borderWidth: 1, borderColor: COLORS.border },
   logicSec: { marginVertical: GAP.sm },
   logicHdr: { flexDirection: 'row', alignItems: 'center', gap: GAP.sm, marginBottom: GAP.sm },
   logicTitle: { color: COLORS.text, fontSize: TYPE.base, fontWeight: '700' },
   logicBody: { color: COLORS.textDim, fontSize: TYPE.sm, lineHeight: 22 },
   logicDiv: { height: 1, backgroundColor: COLORS.border, marginVertical: GAP.md },
-  tryOnBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.accent, borderRadius: RAD.lg, padding: GAP.lg, gap: GAP.md, marginBottom: GAP.md },
-  tryOnTxt: { color: COLORS.bg, fontSize: TYPE.base, fontWeight: '700' },
-  tryOnSub: { color: COLORS.bg, fontSize: TYPE.xs, opacity: 0.7, marginTop: 1 },
   wearBtn: { flexDirection: 'row', backgroundColor: COLORS.green, borderRadius: RAD.lg, paddingVertical: GAP.lg, justifyContent: 'center', alignItems: 'center', gap: GAP.sm, marginBottom: GAP.md },
   wornBtn: { backgroundColor: COLORS.green + '15', borderWidth: 1, borderColor: COLORS.green + '40' },
   wearTxt: { color: COLORS.bg, fontSize: TYPE.base, fontWeight: '700' },

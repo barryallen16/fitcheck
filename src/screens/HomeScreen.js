@@ -9,7 +9,7 @@ import ErrorBanner from '../components/ErrorBanner';
 import { COLORS, TYPE, GAP, RAD } from '../constants/theme';
 import { Image } from 'expo-image';
 export default function HomeScreen() {
-  const { active, wardrobe, outfits, fullBodyPhoto, serverUrl, serverOk, modelName, setServerUrl, ping } = useApp();
+  const { active, wardrobe, outfits, serverUrl, serverOk, modelName, setServerUrl, ping } = useApp();
   const [showCfg, setShowCfg] = useState(false);
   const [urlDraft, setUrlDraft] = useState(serverUrl);
   const [connecting, setConnecting] = useState(false);
@@ -84,14 +84,6 @@ const blurhash = 'L79i;qIq0yxHoaoLoMWV02%0}@NZ';
           <View style={s.statBox}><Text style={s.statNum}>{unworn}</Text><Text style={s.statLbl}>Unworn</Text></View>
           <View style={s.statBox}><Text style={s.statNum}>{worn}</Text><Text style={s.statLbl}>Worn</Text></View>
         </View>
-
-        {/* Quick status */}
-        {!fullBodyPhoto && (
-          <View style={s.tipCard}>
-            <Ionicons name="person-outline" size={20} color={COLORS.orange} />
-            <Text style={s.tipTxt}>Add a full-body photo in the "Me" tab for virtual try-on</Text>
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -122,6 +114,4 @@ const s = StyleSheet.create({
   statBox: { width: '48%', backgroundColor: COLORS.card, borderRadius: RAD.md, padding: GAP.lg, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
   statNum: { fontSize: TYPE.xxl, fontWeight: '800', color: COLORS.primary },
   statLbl: { fontSize: TYPE.xs, color: COLORS.textDim, marginTop: GAP.xs, textTransform: 'uppercase' },
-  tipCard: { flexDirection: 'row', gap: GAP.sm, backgroundColor: COLORS.orange + '10', borderRadius: RAD.md, padding: GAP.md, borderWidth: 1, borderColor: COLORS.orange + '25' },
-  tipTxt: { flex: 1, color: COLORS.orange, fontSize: TYPE.sm },
 });

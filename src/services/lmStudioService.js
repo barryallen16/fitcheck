@@ -108,7 +108,28 @@ class LMStudioService {
     }
   }
 
-  // ── Vision analysis (local only) ──────────────────────
+  // ── Compatibility evaluation (Task B fine-tuned model) ──
+  async evaluateCompatibility(anchor, candidate) {
+    try {
+      const c = new AbortController();
+      const t = setTimeout(() => c.abort(), 20000);
+      const res = await fetch(`${this.baseUrl}/evaluate-compatibility`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ anchor, candidate }),
+        signal: c.signal,
+      });
+      clearTimeout(t);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('evaluateCompatibility error:', e);
+    }
+    return null;
+  }
+
+  // ── Vision analysis (Task A fine-tuned model + fallback) ──
   async analyzeGarment(imageUri) {
     await this._ensureConnected();
     let base64;
@@ -124,6 +145,33 @@ class LMStudioService {
       );
       base64 = manipulatedImage.base64;
     } catch (e) { throw new Error(`Cannot process or read image: ${e.message}`); }
+
+    // Try dedicated Task A endpoint first
+    try {
+      const c = new AbortController();
+      const t = setTimeout(() => c.abort(), 35000);
+      const res = await fetch(`${this.baseUrl}/analyze-garment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: `data:image/jpeg;base64,${base64}` }),
+        signal: c.signal,
+      });
+      clearTimeout(t);
+      if (res.ok) {
+        const d = await res.json();
+        if (d.analyzed_garment) {
+          const desc = d.analyzed_garment.trim();
+          const firstSentence = desc.split('.')[0].trim();
+          const summary = firstSentence.length > 50 ? firstSentence.substring(0, 47) + '...' : firstSentence;
+          const cat = d.category ? (d.category.charAt(0).toUpperCase() + d.category.slice(1).toLowerCase()) : 'Top';
+          return {
+            summary: summary || 'Garment Item',
+            analyzed_garment: desc,
+            category: cat,
+          };
+        }
+      }
+    } catch {}
 
     const payload = {
       model: this.modelId || 'default',
@@ -172,7 +220,7 @@ Output ONLY: {"summary":"...","analyzed_garment":"...","category":"..."}`
     // Fire BOTH simultaneously
     // LM Studio = slow (2B model, 10-30s)
     // API = fast (cloud model, 2-5s)
-    // We wait for BOTH — response appears after LM Studio finishes
+    // We wait for BOTH - response appears after LM Studio finishes
     // We USE the API's better response
 
     const [lmResult, apiResult] = await Promise.allSettled([
@@ -215,13 +263,48 @@ Output ONLY: {"summary":"...","analyzed_garment":"...","category":"..."}`
       }
     }
 
+    if (validated._topGarment && validated._bottomGarment) {
+      const anchor = `${validated._topGarment.summary}: ${validated._topGarment.analyzed_garment || validated._topGarment.category}`;
+      const candidate = `${validated._bottomGarment.summary}: ${validated._bottomGarment.analyzed_garment || validated._bottomGarment.category}`;
+      const comp = await this.evaluateCompatibility(anchor, candidate);
+      if (comp) {
+        validated.compatibility = comp;
+        validated.score = comp.score;
+        validated.probability = comp.probability;
+        validated.rationale = comp.rationale;
+        if (comp.rationale) {
+          validated.colorLogic = comp.rationale;
+        }
+      }
+    }
+
     return validated;
   }
 
   async _getLogicForPair(topG, bottomG, weatherStr) {
+    if (topG && bottomG) {
+      const anchor = `${topG.summary}: ${topG.analyzed_garment || topG.category}`;
+      const candidate = `${bottomG.summary}: ${bottomG.analyzed_garment || bottomG.category}`;
+      const comp = await this.evaluateCompatibility(anchor, candidate);
+      if (comp) {
+        return {
+          top_label: topG.summary,
+          bottom_label: bottomG.summary,
+          colorLogic: comp.rationale || 'Complementary colors.',
+          silhouetteLogic: 'Balanced proportions suited for daily comfort.',
+          compatibility: comp,
+          score: comp.score,
+          probability: comp.probability,
+          rationale: comp.rationale,
+          _topGarment: topG,
+          _bottomGarment: bottomG,
+        };
+      }
+    }
+
     const prompt = `Outfit for ${weatherStr}:
-Top: "${topG.summary}" — ${topG.analyzed_garment}
-${bottomG ? `Bottom: "${bottomG.summary}" — ${bottomG.analyzed_garment}` : 'Full-body garment.'}
+Top: "${topG.summary}" - ${topG.analyzed_garment}
+${bottomG ? `Bottom: "${bottomG.summary}" - ${bottomG.analyzed_garment}` : 'Full-body garment.'}
 JSON ONLY: {"colorLogic":"...","silhouetteLogic":"..."}`;
 
     // Dual again
@@ -305,7 +388,7 @@ JSON ONLY: {"colorLogic":"...","silhouetteLogic":"..."}`;
     } catch (e) { clearTimeout(t); if (e.name === 'AbortError') throw new Error('Timeout (3 min).'); throw e; }
   }
 
-  // Same as _post but won't throw — returns null on failure
+  // Same as _post but won't throw - returns null on failure
   async _postSafe(path, body) {
     try { return await this._post(path, body); }
     catch { return null; }

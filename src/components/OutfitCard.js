@@ -7,7 +7,6 @@ export default function OutfitCard({ outfit, wardrobe, onWear, onUnwear, onDelet
   const topG = wardrobe.find((g) => g.id === outfit.topId);
   const botG = wardrobe.find((g) => g.id === outfit.bottomId);
   const isWorn = outfit.status === 'worn';
-  const hasTryOn = !!outfit.tryOnImageUri;
 
   return (
     <TouchableOpacity
@@ -16,23 +15,17 @@ export default function OutfitCard({ outfit, wardrobe, onWear, onUnwear, onDelet
       onPress={onPress}
     >
       <View style={s.imgRow}>
-        {hasTryOn ? (
-          <Image source={{ uri: outfit.tryOnImageUri }} style={s.tryOnThumb} />
+        {topG ? (
+          <Image source={{ uri: topG.imageUri }} style={s.img} />
         ) : (
-          <>
-            {topG ? (
-              <Image source={{ uri: topG.imageUri }} style={s.img} />
-            ) : (
-              <View style={[s.img, s.ph]}><Ionicons name="shirt-outline" size={20} color={COLORS.textMuted} /></View>
-            )}
-            {outfit.bottomLabel !== 'N/A' && (
-              botG ? (
-                <Image source={{ uri: botG.imageUri }} style={s.img} />
-              ) : (
-                <View style={[s.img, s.ph]}><Ionicons name="cut-outline" size={20} color={COLORS.textMuted} /></View>
-              )
-            )}
-          </>
+          <View style={[s.img, s.ph]}><Ionicons name="shirt-outline" size={20} color={COLORS.textMuted} /></View>
+        )}
+        {outfit.bottomLabel !== 'N/A' && (
+          botG ? (
+            <Image source={{ uri: botG.imageUri }} style={s.img} />
+          ) : (
+            <View style={[s.img, s.ph]}><Ionicons name="cut-outline" size={20} color={COLORS.textMuted} /></View>
+          )
         )}
       </View>
 
@@ -49,10 +42,12 @@ export default function OutfitCard({ outfit, wardrobe, onWear, onUnwear, onDelet
               <Text style={[s.tagTxt, { color: COLORS.green }]}>{outfit.wornDate}</Text>
             </View>
           )}
-          {hasTryOn && (
-            <View style={[s.tag, { backgroundColor: COLORS.accentGlow }]}>
-              <Ionicons name="person" size={11} color={COLORS.accent} />
-              <Text style={[s.tagTxt, { color: COLORS.accent }]}>Try-On</Text>
+          {outfit.score && (
+            <View style={[s.tag, { backgroundColor: COLORS.primaryGlow }]}>
+              <Ionicons name="sparkles" size={11} color={COLORS.primary} />
+              <Text style={[s.tagTxt, { color: COLORS.primary }]}>
+                {Math.round((outfit.probability || (outfit.score / 5)) * 100)}%
+              </Text>
             </View>
           )}
         </View>
@@ -89,7 +84,6 @@ const s = StyleSheet.create({
   cardWorn: { borderColor: COLORS.green + '40', backgroundColor: COLORS.green + '06' },
   imgRow: { flexDirection: 'row', gap: GAP.xs },
   img: { width: 48, height: 48, borderRadius: RAD.sm, backgroundColor: COLORS.cardLight },
-  tryOnThumb: { width: 48, height: 64, borderRadius: RAD.sm, backgroundColor: COLORS.cardLight },
   ph: { justifyContent: 'center', alignItems: 'center' },
   info: { flex: 1, marginLeft: GAP.md },
   topLabel: { color: COLORS.text, fontSize: TYPE.sm, fontWeight: '600' },

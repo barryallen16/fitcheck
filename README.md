@@ -1,6 +1,6 @@
 # FitCheck
 
-FitCheck is a React Native mobile application for organizing your wardrobe, generating outfit recommendations, and previewing virtual try-ons.
+FitCheck is a React Native mobile application for organizing your wardrobe and generating outfit recommendations.
 It is built with Expo.
 
 <img width="1920" height="1080" alt="demo-ss" src="https://github.com/user-attachments/assets/a79deedb-1230-4669-9938-63c6c4e30b6b" />
@@ -28,7 +28,6 @@ The app catalogs garment photos and tags attributes such as color, category, sty
 Outfit generation combines these tags with real-time local weather fetched from Open-Meteo.
 Recommendations run against the hosted Hugging Face Space API by default.
 You can switch to a local LM Studio instance running on your machine whenever you want an offline or self-hosted setup.
-Virtual try-on requests dispatch to Hugging Face Spaces using image generation models.
 Wardrobe items, outfits, style personas, and image caches remain on your device using AsyncStorage and local filesystem storage.
 
 ## Project structure
@@ -56,7 +55,6 @@ FitCheck/
 
 * Node.js (v18 or newer recommended) and npm.
 * Expo Go installed on an Android or iOS phone, or a configured Android/iOS simulator.
-* A Hugging Face user token with read permissions if you plan to use virtual try-on.
 * (Optional) LM Studio with the Qwen3-VL-2B GGUF model loaded if you prefer running inference locally.
 
 ### Installation
@@ -82,7 +80,6 @@ Edit `src/config/keys.js` with your parameters:
 Leave empty to use the default endpoints.
 * `LMS_KEYS`: API keys for your remote endpoint, if authentication is required.
 * `LMS_MODEL`: Model identifier expected by your remote endpoint.
-* `HF_TOKEN`: Hugging Face API tokens used for virtual try-on requests.
 
 `src/config/keys.js` is ignored by git to prevent committing secrets.
 

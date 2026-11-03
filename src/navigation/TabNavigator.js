@@ -15,7 +15,6 @@ import OutfitHistoryScreen from '../screens/OutfitHistoryScreen';
 import OutfitDetailScreen from '../screens/OutfitDetailScreen';
 import OutfitCalendarScreen from '../screens/OutfitCalendarScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import TryOnScreen from '../screens/TryOnScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -45,7 +44,6 @@ function StyleStack() {
       <Stack.Screen name="OutfitHistory" component={OutfitHistoryScreen} />
       <Stack.Screen name="OutfitDetail" component={OutfitDetailScreen} />
       <Stack.Screen name="OutfitCalendar" component={OutfitCalendarScreen} />
-      <Stack.Screen name="TryOn" component={TryOnScreen} />
     </Stack.Navigator>
   );
 }
