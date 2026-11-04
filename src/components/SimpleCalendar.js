@@ -1,8 +1,7 @@
-// src/components/SimpleCalendar.js
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, TYPE, GAP, RAD } from '../constants/theme';
+import PixelIcon from './PixelIcon';
+import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 import { todayStr } from '../utils/helpers';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -42,12 +41,12 @@ export default function SimpleCalendar({ markedDates = {}, onDayPress, selectedD
     <View style={s.container}>
       {/* Header */}
       <View style={s.header}>
-        <TouchableOpacity onPress={prevMonth} style={s.arrow}>
-          <Ionicons name="chevron-back" size={22} color={COLORS.text} />
+        <TouchableOpacity onPress={prevMonth} style={s.arrow} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <PixelIcon name="chevron-left" size={18} color={COLORS.text} />
         </TouchableOpacity>
-        <Text style={s.monthLabel}>{MONTHS[month]} {year}</Text>
-        <TouchableOpacity onPress={nextMonth} style={s.arrow}>
-          <Ionicons name="chevron-forward" size={22} color={COLORS.text} />
+        <Text style={s.monthLabel}>{MONTHS[month].toUpperCase()} {year}</Text>
+        <TouchableOpacity onPress={nextMonth} style={s.arrow} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <PixelIcon name="chevron-right" size={18} color={COLORS.text} />
         </TouchableOpacity>
       </View>
 
@@ -61,37 +60,39 @@ export default function SimpleCalendar({ markedDates = {}, onDayPress, selectedD
       </View>
 
       {/* Date grid */}
-      {Array.from({ length: cells.length / 7 }, (_, row) => (
-        <View key={row} style={s.row}>
-          {cells.slice(row * 7, row * 7 + 7).map((day, col) => {
-            if (day === null) return <View key={col} style={s.cell} />;
-
+      {Array.from({ length: cells.length / 7 }, (_, rowIdx) => (
+        <View key={rowIdx} style={s.row}>
+          {cells.slice(rowIdx * 7, rowIdx * 7 + 7).map((day, colIdx) => {
+            if (day === null) {
+              return <View key={`empty-${rowIdx}-${colIdx}`} style={s.cell} />;
+            }
             const ds = dateStr(day);
             const isToday = ds === today;
-            const isSelected = ds === selectedDate;
-            const hasOutfit = markedDates[ds];
+            const isSel = ds === selectedDate;
+            const hasOutfit = Boolean(markedDates[ds]);
 
             return (
               <TouchableOpacity
-                key={col}
+                key={ds}
                 style={[
                   s.cell,
+                  s.dayCell,
                   isToday && s.todayCell,
-                  isSelected && s.selectedCell,
+                  isSel && s.selectedCell,
                 ]}
                 onPress={() => onDayPress?.(ds)}
-                activeOpacity={0.6}
+                activeOpacity={0.7}
               >
                 <Text
                   style={[
                     s.dayNum,
                     isToday && s.todayNum,
-                    isSelected && s.selectedNum,
+                    isSel && s.selectedNum,
                   ]}
                 >
                   {day}
                 </Text>
-                {hasOutfit && <View style={s.dot} />}
+                {hasOutfit && <View style={[s.dot, isSel && s.selectedDot]} />}
               </TouchableOpacity>
             );
           })}
@@ -103,32 +104,79 @@ export default function SimpleCalendar({ markedDates = {}, onDayPress, selectedD
 
 const s = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.card, borderRadius: RAD.lg,
-    padding: GAP.md, borderWidth: 1, borderColor: COLORS.border,
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: GAP.sm, marginBottom: GAP.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: GAP.md,
   },
-  arrow: { padding: GAP.sm },
-  monthLabel: { color: COLORS.text, fontSize: TYPE.lg, fontWeight: '700' },
-  row: { flexDirection: 'row' },
+  arrow: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  monthLabel: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.text,
+    fontSize: TYPE.sm,
+    letterSpacing: 1.5,
+  },
+  row: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
   cell: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    paddingVertical: GAP.sm, minHeight: 42,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 38,
+    marginHorizontal: 1,
   },
-  dayName: { color: COLORS.textMuted, fontSize: TYPE.xs, fontWeight: '600' },
-  dayNum: { color: COLORS.text, fontSize: TYPE.sm, fontWeight: '500' },
+  dayName: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.textDim,
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
+  dayCell: {
+    borderRadius: RAD.xs,
+  },
   todayCell: {
-    backgroundColor: COLORS.primaryGlow, borderRadius: RAD.sm,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
-  todayNum: { color: COLORS.primary, fontWeight: '700' },
   selectedCell: {
-    backgroundColor: COLORS.primary, borderRadius: RAD.sm,
+    backgroundColor: COLORS.primary,
   },
-  selectedNum: { color: COLORS.bg, fontWeight: '800' },
+  dayNum: {
+    fontFamily: FONTS.regular,
+    color: COLORS.text,
+    fontSize: TYPE.xs,
+  },
+  todayNum: {
+    color: COLORS.primary,
+    fontFamily: FONTS.bold,
+  },
+  selectedNum: {
+    color: '#0B0C10',
+    fontFamily: FONTS.bold,
+  },
   dot: {
-    width: 6, height: 6, borderRadius: 3,
-    backgroundColor: COLORS.green, marginTop: 2,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: COLORS.secondary,
+    position: 'absolute',
+    bottom: 3,
+  },
+  selectedDot: {
+    backgroundColor: '#0B0C10',
   },
 });

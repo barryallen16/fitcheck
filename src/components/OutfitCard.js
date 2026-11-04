@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, TYPE, GAP, RAD } from '../constants/theme';
+import PixelIcon from './PixelIcon';
+import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 
 export default function OutfitCard({ outfit, wardrobe, onWear, onUnwear, onDelete, onPress }) {
   const topG = wardrobe.find((g) => g.id === outfit.topId);
@@ -18,13 +18,17 @@ export default function OutfitCard({ outfit, wardrobe, onWear, onUnwear, onDelet
         {topG ? (
           <Image source={{ uri: topG.imageUri }} style={s.img} />
         ) : (
-          <View style={[s.img, s.ph]}><Ionicons name="shirt-outline" size={20} color={COLORS.textMuted} /></View>
+          <View style={[s.img, s.ph]}>
+            <PixelIcon name="briefcase" size={18} color={COLORS.textMuted} />
+          </View>
         )}
         {outfit.bottomLabel !== 'N/A' && (
           botG ? (
             <Image source={{ uri: botG.imageUri }} style={s.img} />
           ) : (
-            <View style={[s.img, s.ph]}><Ionicons name="cut-outline" size={20} color={COLORS.textMuted} /></View>
+            <View style={[s.img, s.ph]}>
+              <PixelIcon name="sparkles" size={18} color={COLORS.textMuted} />
+            </View>
           )
         )}
       </View>
@@ -35,17 +39,18 @@ export default function OutfitCard({ outfit, wardrobe, onWear, onUnwear, onDelet
           <Text style={s.botLabel} numberOfLines={1}>+ {outfit.bottomLabel}</Text>
         )}
         <Text style={s.weather} numberOfLines={1}>{outfit.weather}</Text>
+
         <View style={s.tagRow}>
           {isWorn && (
-            <View style={s.tag}>
-              <Ionicons name="checkmark-circle" size={11} color={COLORS.green} />
-              <Text style={[s.tagTxt, { color: COLORS.green }]}>{outfit.wornDate}</Text>
+            <View style={s.wornTag}>
+              <PixelIcon name="check" size={10} color={COLORS.green} />
+              <Text style={s.wornTagTxt}>{outfit.wornDate}</Text>
             </View>
           )}
           {outfit.score && (
-            <View style={[s.tag, { backgroundColor: COLORS.primaryGlow }]}>
-              <Ionicons name="sparkles" size={11} color={COLORS.primary} />
-              <Text style={[s.tagTxt, { color: COLORS.primary }]}>
+            <View style={s.scoreTag}>
+              <PixelIcon name="shield" size={10} color={COLORS.secondary} />
+              <Text style={s.scoreTagTxt}>
                 {Math.round((outfit.probability || (outfit.score / 5)) * 100)}%
               </Text>
             </View>
@@ -55,43 +60,131 @@ export default function OutfitCard({ outfit, wardrobe, onWear, onUnwear, onDelet
 
       <View style={s.actions}>
         {isWorn ? (
-          <TouchableOpacity onPress={() => onUnwear?.(outfit.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={s.actBtn}>
-            <Ionicons name="close-circle-outline" size={20} color={COLORS.orange} />
+          <TouchableOpacity
+            onPress={() => onUnwear?.(outfit.id)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={s.actBtn}
+          >
+            <PixelIcon name="close" size={16} color={COLORS.orange} />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={() => onWear?.(outfit.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={s.actBtn}>
-            <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.green} />
+          <TouchableOpacity
+            onPress={() => onWear?.(outfit.id)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={s.actBtn}
+          >
+            <PixelIcon name="check" size={16} color={COLORS.green} />
           </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={() => onDelete?.(outfit.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={s.actBtn}>
-          <Ionicons name="trash-outline" size={17} color={COLORS.red} />
+        <TouchableOpacity
+          onPress={() => onDelete?.(outfit.id)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={s.actBtn}
+        >
+          <PixelIcon name="trash" size={16} color={COLORS.red} />
         </TouchableOpacity>
       </View>
 
-      {/* Chevron to show it's tappable */}
-      <Ionicons name="chevron-forward" size={16} color={COLORS.textMuted} style={{ marginLeft: GAP.xs }} />
+      <PixelIcon name="chevron-right" size={16} color={COLORS.textMuted} style={{ marginLeft: 2 }} />
     </TouchableOpacity>
   );
 }
 
 const s = StyleSheet.create({
   card: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.card, borderRadius: RAD.lg,
-    padding: GAP.md, marginBottom: GAP.md,
-    borderWidth: 1, borderColor: COLORS.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    marginBottom: GAP.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  cardWorn: { borderColor: COLORS.green + '40', backgroundColor: COLORS.green + '06' },
-  imgRow: { flexDirection: 'row', gap: GAP.xs },
-  img: { width: 48, height: 48, borderRadius: RAD.sm, backgroundColor: COLORS.cardLight },
-  ph: { justifyContent: 'center', alignItems: 'center' },
-  info: { flex: 1, marginLeft: GAP.md },
-  topLabel: { color: COLORS.text, fontSize: TYPE.sm, fontWeight: '600' },
-  botLabel: { color: COLORS.textDim, fontSize: TYPE.xs, marginTop: 1 },
-  weather: { color: COLORS.textMuted, fontSize: TYPE.xs, marginTop: GAP.xs },
-  tagRow: { flexDirection: 'row', gap: GAP.sm, marginTop: GAP.xs, flexWrap: 'wrap' },
-  tag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: COLORS.green + '12', paddingHorizontal: GAP.sm, paddingVertical: 1, borderRadius: RAD.full },
-  tagTxt: { fontSize: 10, fontWeight: '600' },
-  actions: { gap: GAP.sm, marginLeft: GAP.sm },
-  actBtn: { padding: GAP.xs },
+  cardWorn: {
+    borderColor: 'rgba(52, 211, 153, 0.25)',
+    backgroundColor: 'rgba(52, 211, 153, 0.03)',
+  },
+  imgRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  img: {
+    width: 48,
+    height: 48,
+    borderRadius: RAD.xs,
+    backgroundColor: COLORS.cardLight,
+  },
+  ph: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  info: {
+    flex: 1,
+    marginLeft: GAP.md,
+  },
+  topLabel: {
+    fontFamily: FONTS.bold,
+    color: COLORS.text,
+    fontSize: TYPE.sm,
+  },
+  botLabel: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: TYPE.xs,
+    marginTop: 1,
+  },
+  weather: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    gap: GAP.xs,
+    marginTop: 4,
+  },
+  wornTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(52, 211, 153, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: RAD.xs,
+  },
+  wornTagTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.green,
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
+  scoreTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(5, 147, 198, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: RAD.xs,
+  },
+  scoreTagTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.secondary,
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginLeft: GAP.xs,
+  },
+  actBtn: {
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

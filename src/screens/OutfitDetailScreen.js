@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import PixelIcon from '../components/PixelIcon';
 import { useApp } from '../context/AppContext';
-import { COLORS, TYPE, GAP, RAD } from '../constants/theme';
+import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 import { todayStr } from '../utils/helpers';
 
 const W = Dimensions.get('window').width;
@@ -23,9 +23,9 @@ export default function OutfitDetailScreen({ route, navigation }) {
     return (
       <SafeAreaView style={s.c} edges={['top']}>
         <View style={s.center}>
-          <Text style={s.errTxt}>Outfit not found</Text>
+          <Text style={s.errTxt}>OUTFIT NOT FOUND</Text>
           <TouchableOpacity onPress={() => navigation.goBack()} style={s.backLink}>
-            <Text style={s.backLinkTxt}>Go Back</Text>
+            <Text style={s.backLinkTxt}>Return to wardrobe</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -43,13 +43,15 @@ export default function OutfitDetailScreen({ route, navigation }) {
               <Image source={{ uri: garment.imageUri }} style={s.pieceImg} />
               <View style={{ flex: 1, marginLeft: GAP.md }}>
                 <Text style={s.pieceName}>{garment.summary}</Text>
-                <Text style={s.pieceCat}>{garment.category}</Text>
+                <View style={s.pieceBadge}>
+                  <Text style={s.pieceCat}>{garment.category}</Text>
+                </View>
                 <Text style={s.pieceDesc} numberOfLines={3}>{garment.analyzed_garment}</Text>
               </View>
             </>
           ) : (
             <View style={s.noMatch}>
-              <Ionicons name="help-circle-outline" size={28} color={COLORS.textMuted} />
+              <PixelIcon name="info-box" size={24} color={COLORS.textMuted} />
               <Text style={s.noMatchTxt}>"{label}"</Text>
             </View>
           )}
@@ -61,44 +63,47 @@ export default function OutfitDetailScreen({ route, navigation }) {
   return (
     <SafeAreaView style={s.c} edges={['top']}>
       <View style={s.hdr}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: GAP.xs }}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={s.backBtn}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
+          <PixelIcon name="arrow-left" size={20} color={COLORS.text} />
         </TouchableOpacity>
-        <Text style={s.hdrTitle}>Outfit Detail</Text>
-        <View style={{ width: 40 }} />
+        <Text style={s.hdrTitle}>OUTFIT DETAIL</Text>
+        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        {/* Weather */}
+        {/* Weather Card */}
         <View style={s.weatherCard}>
-          <Ionicons name="partly-sunny" size={22} color={COLORS.primary} />
+          <View style={s.weatherIconWrap}>
+            <PixelIcon name="sun" size={20} color={COLORS.secondary} />
+          </View>
           <View style={{ flex: 1, marginLeft: GAP.md }}>
-            <Text style={s.weatherMain}>{outfit.weather}</Text>
+            <Text style={s.weatherMain}>{outfit.weather || 'Standard Forecast'}</Text>
             {outfit.weatherCity ? <Text style={s.weatherCity}>{outfit.weatherCity}</Text> : null}
           </View>
           {isWorn && (
             <View style={s.wornTag}>
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.green} />
-              <Text style={s.wornTagTxt}>Worn {outfit.wornDate}</Text>
+              <PixelIcon name="check" size={12} color={COLORS.green} />
+              <Text style={s.wornTagTxt}>WORN {outfit.wornDate}</Text>
             </View>
           )}
         </View>
 
-        {/* Garments */}
-        <Text style={s.secLabel}>Outfit</Text>
-        <Piece label={outfit.topLabel} garment={topG} title="Top / Upper" />
-        <Piece label={outfit.bottomLabel} garment={botG} title="Bottom / Lower" />
-
-        {outfit.score && (
+        {/* Task B Model Match */}
+        {outfit.score != null && (
           <View style={s.compatCard}>
             <View style={s.compatHdr}>
               <View style={s.compatTitleRow}>
-                <Ionicons name="shield-checkmark" size={16} color={COLORS.primary} />
-                <Text style={s.compatTitle}>Task B Model Compatibility</Text>
+                <PixelIcon name="shield" size={16} color={COLORS.secondary} />
+                <Text style={s.compatTitle}>TASK B COMPATIBILITY</Text>
               </View>
               <View style={s.compatBadge}>
                 <Text style={s.compatBadgeTxt}>
-                  {Math.round((outfit.probability || (outfit.score / 5)) * 100)}% Match
+                  {Math.round((outfit.probability || (outfit.score / 5)) * 100)}% MATCH
                 </Text>
               </View>
             </View>
@@ -106,42 +111,53 @@ export default function OutfitDetailScreen({ route, navigation }) {
           </View>
         )}
 
-        {/* Logic */}
+        {/* Garments in Outfit */}
+        <Text style={s.secLabel}>ENSEMBLE PIECES</Text>
+        <Piece label={outfit.topLabel} garment={topG} title="TOP / UPPER" />
+        <Piece label={outfit.bottomLabel} garment={botG} title="BOTTOM / LOWER" />
+
+        {/* Styling Logic */}
         <View style={s.logicCard}>
-          <View style={s.logicSec}>
-            <View style={s.logicHdr}>
-              <Ionicons name="color-palette-outline" size={18} color={COLORS.primary} />
-              <Text style={s.logicTitle}>Color Logic</Text>
+          {outfit.colorLogic ? (
+            <View style={s.logicSec}>
+              <View style={s.logicHdr}>
+                <PixelIcon name="sparkles" size={16} color={COLORS.primary} />
+                <Text style={s.logicTitle}>COLOR LOGIC</Text>
+              </View>
+              <Text style={s.logicBody}>{outfit.colorLogic}</Text>
             </View>
-            <Text style={s.logicBody}>{outfit.colorLogic}</Text>
-          </View>
-          <View style={s.logicDiv} />
-          <View style={s.logicSec}>
-            <View style={s.logicHdr}>
-              <Ionicons name="body-outline" size={18} color={COLORS.accent} />
-              <Text style={s.logicTitle}>Silhouette Logic</Text>
+          ) : null}
+
+          {outfit.colorLogic && outfit.silhouetteLogic ? <View style={s.logicDiv} /> : null}
+
+          {outfit.silhouetteLogic ? (
+            <View style={s.logicSec}>
+              <View style={s.logicHdr}>
+                <PixelIcon name="user" size={16} color={COLORS.secondary} />
+                <Text style={s.logicTitle}>SILHOUETTE LOGIC</Text>
+              </View>
+              <Text style={s.logicBody}>{outfit.silhouetteLogic}</Text>
             </View>
-            <Text style={s.logicBody}>{outfit.silhouetteLogic}</Text>
-          </View>
+          ) : null}
         </View>
 
         {/* Actions */}
         <TouchableOpacity
           style={[s.wearBtn, isWorn && s.wornBtn]}
-          onPress={() => isWorn ? unwearOutfit(outfit.id) : wearOutfit(outfit.id, todayStr())}
+          onPress={() => (isWorn ? unwearOutfit(outfit.id) : wearOutfit(outfit.id, todayStr()))}
           activeOpacity={0.8}
         >
-          <Ionicons
-            name={isWorn ? 'close-circle-outline' : 'checkmark-circle-outline'}
-            size={22}
-            color={isWorn ? COLORS.orange : COLORS.bg}
+          <PixelIcon
+            name={isWorn ? 'close' : 'check'}
+            size={18}
+            color={isWorn ? COLORS.orange : COLORS.white}
           />
           <Text style={[s.wearBtnTxt, isWorn && { color: COLORS.orange }]}>
-            {isWorn ? 'Mark as Unworn' : 'Wear Today'}
+            {isWorn ? 'MARK AS UNWORN' : 'WEAR TODAY'}
           </Text>
         </TouchableOpacity>
 
-        <Text style={s.dateTxt}>Generated {new Date(outfit.createdAt).toLocaleDateString()}</Text>
+        <Text style={s.dateTxt}>Generated on {new Date(outfit.createdAt).toLocaleDateString()}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -149,50 +165,262 @@ export default function OutfitDetailScreen({ route, navigation }) {
 
 const s = StyleSheet.create({
   c: { flex: 1, backgroundColor: COLORS.bg },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errTxt: { color: COLORS.red, fontSize: TYPE.lg },
-  backLink: { marginTop: GAP.lg },
-  backLinkTxt: { color: COLORS.textDim, fontSize: TYPE.base },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: GAP.xxl },
+  errTxt: { fontFamily: FONTS.pixel, color: COLORS.red, fontSize: TYPE.sm, letterSpacing: 1 },
+  backLink: { marginTop: GAP.lg, minHeight: 44, justifyContent: 'center' },
+  backLinkTxt: { fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: TYPE.sm },
 
-  hdr: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: GAP.lg, paddingVertical: GAP.md, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  hdrTitle: { color: COLORS.text, fontSize: TYPE.xl, fontWeight: '700' },
-  scroll: { paddingHorizontal: GAP.xl, paddingTop: GAP.lg, paddingBottom: GAP.huge * 2 },
+  hdr: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: GAP.lg,
+    paddingVertical: GAP.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hdrTitle: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.text,
+    fontSize: TYPE.base,
+    letterSpacing: 1.5,
+  },
+  scroll: {
+    paddingHorizontal: GAP.lg,
+    paddingTop: GAP.lg,
+    paddingBottom: GAP.huge * 2,
+  },
 
-  secLabel: { color: COLORS.textDim, fontSize: TYPE.xs, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: GAP.md },
+  secLabel: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.textDim,
+    fontSize: 10,
+    letterSpacing: 1.2,
+    marginBottom: GAP.sm,
+  },
 
-  weatherCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: RAD.lg, padding: GAP.lg, marginBottom: GAP.xl, borderWidth: 1, borderColor: COLORS.border },
-  weatherMain: { color: COLORS.text, fontSize: TYPE.base, fontWeight: '600' },
-  weatherCity: { color: COLORS.textDim, fontSize: TYPE.xs, marginTop: 2 },
-  wornTag: { flexDirection: 'row', alignItems: 'center', gap: GAP.xs, backgroundColor: COLORS.green + '15', paddingHorizontal: GAP.sm, paddingVertical: GAP.xs, borderRadius: RAD.full },
-  wornTagTxt: { color: COLORS.green, fontSize: TYPE.xs, fontWeight: '600' },
+  weatherCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    marginBottom: GAP.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  weatherIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: RAD.sm,
+    backgroundColor: COLORS.cardLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  weatherMain: {
+    fontFamily: FONTS.medium,
+    color: COLORS.text,
+    fontSize: TYPE.sm,
+  },
+  weatherCity: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: TYPE.xs,
+    marginTop: 2,
+  },
+  wornTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GAP.xs,
+    backgroundColor: 'rgba(52, 211, 153, 0.1)',
+    paddingHorizontal: GAP.sm,
+    paddingVertical: GAP.xs,
+    borderRadius: RAD.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.3)',
+  },
+  wornTagTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.green,
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
 
-  piece: { marginBottom: GAP.lg },
-  pieceTitle: { color: COLORS.textMuted, fontSize: TYPE.xs, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, marginBottom: GAP.sm },
-  pieceCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: RAD.lg, padding: GAP.lg, borderWidth: 1, borderColor: COLORS.primaryMuted },
-  pieceImg: { width: 80, height: 80, borderRadius: RAD.md, backgroundColor: COLORS.cardLight },
-  pieceName: { color: COLORS.text, fontSize: TYPE.lg, fontWeight: '700' },
-  pieceCat: { color: COLORS.primary, fontSize: TYPE.xs, fontWeight: '700', textTransform: 'uppercase', marginTop: GAP.xs },
-  pieceDesc: { color: COLORS.textDim, fontSize: TYPE.xs, marginTop: GAP.xs, lineHeight: 16 },
-  noMatch: { flex: 1, alignItems: 'center', paddingVertical: GAP.md, gap: GAP.xs },
-  noMatchTxt: { color: COLORS.text, fontSize: TYPE.base, fontWeight: '600' },
-  compatCard: { backgroundColor: COLORS.primaryGlow, borderRadius: RAD.lg, padding: GAP.lg, marginBottom: GAP.lg, borderWidth: 1, borderColor: COLORS.primaryMuted },
-  compatHdr: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: GAP.sm },
-  compatTitleRow: { flexDirection: 'row', alignItems: 'center', gap: GAP.xs },
-  compatTitle: { color: COLORS.text, fontSize: TYPE.sm, fontWeight: '700' },
-  compatBadge: { backgroundColor: COLORS.primary, paddingHorizontal: GAP.sm, paddingVertical: 2, borderRadius: RAD.full },
-  compatBadgeTxt: { color: COLORS.bg, fontSize: TYPE.xs, fontWeight: '700' },
-  compatRationale: { color: COLORS.text, fontSize: TYPE.sm, lineHeight: 20 },
+  piece: {
+    marginBottom: GAP.md,
+  },
+  pieceTitle: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.textMuted,
+    fontSize: 10,
+    letterSpacing: 1,
+    marginBottom: GAP.xs,
+  },
+  pieceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  pieceImg: {
+    width: 72,
+    height: 72,
+    borderRadius: RAD.sm,
+    backgroundColor: COLORS.cardLight,
+  },
+  pieceName: {
+    fontFamily: FONTS.bold,
+    color: COLORS.text,
+    fontSize: TYPE.base,
+  },
+  pieceBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: COLORS.secondaryMuted + '30',
+    paddingHorizontal: GAP.xs + 2,
+    paddingVertical: 2,
+    borderRadius: RAD.xs,
+    marginTop: GAP.xs,
+  },
+  pieceCat: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.secondary,
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
+  pieceDesc: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: TYPE.xs,
+    marginTop: GAP.xs,
+    lineHeight: 16,
+  },
+  noMatch: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: GAP.md,
+    gap: GAP.xs,
+  },
+  noMatchTxt: {
+    fontFamily: FONTS.medium,
+    color: COLORS.text,
+    fontSize: TYPE.sm,
+  },
 
-  logicCard: { backgroundColor: COLORS.card, borderRadius: RAD.lg, padding: GAP.xl, marginBottom: GAP.xl, borderWidth: 1, borderColor: COLORS.border },
-  logicSec: { marginVertical: GAP.sm },
-  logicHdr: { flexDirection: 'row', alignItems: 'center', gap: GAP.sm, marginBottom: GAP.sm },
-  logicTitle: { color: COLORS.text, fontSize: TYPE.base, fontWeight: '700' },
-  logicBody: { color: COLORS.textDim, fontSize: TYPE.sm, lineHeight: 22 },
-  logicDiv: { height: 1, backgroundColor: COLORS.border, marginVertical: GAP.md },
+  compatCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    marginBottom: GAP.md,
+    borderWidth: 1,
+    borderColor: COLORS.secondaryMuted,
+  },
+  compatHdr: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: GAP.xs,
+  },
+  compatTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GAP.xs,
+  },
+  compatTitle: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.text,
+    fontSize: 10,
+    letterSpacing: 1,
+  },
+  compatBadge: {
+    backgroundColor: COLORS.secondary,
+    paddingHorizontal: GAP.sm,
+    paddingVertical: 3,
+    borderRadius: RAD.xs,
+  },
+  compatBadgeTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.bg,
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
+  compatRationale: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: TYPE.xs,
+    lineHeight: 18,
+    marginTop: GAP.xs,
+  },
 
-  wearBtn: { flexDirection: 'row', backgroundColor: COLORS.green, borderRadius: RAD.lg, paddingVertical: GAP.lg, justifyContent: 'center', alignItems: 'center', gap: GAP.sm, marginBottom: GAP.lg },
-  wornBtn: { backgroundColor: COLORS.orange + '15', borderWidth: 1, borderColor: COLORS.orange + '40' },
-  wearBtnTxt: { color: COLORS.bg, fontSize: TYPE.base, fontWeight: '700' },
+  logicCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    marginBottom: GAP.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  logicSec: {
+    marginVertical: GAP.xs,
+  },
+  logicHdr: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GAP.xs,
+    marginBottom: GAP.xs,
+  },
+  logicTitle: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.text,
+    fontSize: 10,
+    letterSpacing: 1,
+  },
+  logicBody: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: TYPE.xs,
+    lineHeight: 18,
+  },
+  logicDiv: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: GAP.sm,
+  },
 
-  dateTxt: { color: COLORS.textMuted, fontSize: TYPE.xs, textAlign: 'center' },
+  wearBtn: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.primary,
+    borderRadius: RAD.md,
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: GAP.sm,
+    marginBottom: GAP.md,
+  },
+  wornBtn: {
+    backgroundColor: 'rgba(251, 146, 60, 0.1)',
+    borderWidth: 1,
+    borderColor: COLORS.orange,
+  },
+  wearBtnTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.white,
+    fontSize: 11,
+    letterSpacing: 1,
+  },
+
+  dateTxt: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textMuted,
+    fontSize: TYPE.xs,
+    textAlign: 'center',
+  },
 });

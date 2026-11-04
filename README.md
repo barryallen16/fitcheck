@@ -14,21 +14,41 @@ The architecture and dataset distillation methods behind FitCheck are published 
 
 ## Ecosystem and architecture
 
-FitCheck spans mobile, web, and hosted inference:
+FitCheck consists of three interconnected repositories and hosted inference endpoints:
 
-* **Mobile App (React Native)**: This repository contains the Expo-based mobile client with local persistence and offline wardrobe storage.
-* **Web Platform**: FitCheck Web provides the browser-based desktop interface.
-* **Cloud Inference API**: A 24/7 inference backend hosted on Hugging Face Spaces at [barryallen16/fitcheck](https://huggingface.co/spaces/barryallen16/fitcheck), serving OpenAI-compatible completion endpoints.
-* **Edge / Local Model**: Quantized [Qwen3-VL-2B-Instruct GGUF](https://huggingface.co/barryallen16/FitCheck-Qwen3-VL-Stylist-GGUF) for on-device or local network inference via LM Studio.
-* **Hugging Face Collection**: Training datasets, fine-tuned weights, and spaces are indexed in the [FitCheck collection](https://huggingface.co/collections/barryallen16/fitcheck).
+* **FitCheck Mobile (`fitcheck-rn`)**:
+This repository contains the Expo React Native mobile client.
+It provides local wardrobe persistence, offline photo storage, and daily outfit generation for personal use.
+The interface uses Geist Pixel for titles, Geist Sans for body text, 24px pixel art icons, and a hot pink and sky blue color scheme.
+
+* **FitCheck Web (`fitcheck-website`)**:
+The desktop web platform built with React, Vite, and Tailwind CSS.
+It offers a browser workspace for managing garments, inspecting VLM tags, and testing outfit recommendations on a computer.
+Both the web platform and the mobile app share the same backend model logic and Task A and Task B prompting pipelines.
+
+* **FitCheck Human Evaluation (`fitcheck-human-eval`)**:
+The Next.js web application built for the empirical research study published in IEEE.
+It served model-generated outfit combinations to human reviewers in blind test batches against baseline models.
+Reviewers scored recommendations on aesthetic pairing, color harmony, and contextual relevance.
+Those submissions saved to a Neon database and provided the validation data published in the research paper.
+
+* **Cloud Inference API**:
+A hosted backend on Hugging Face Spaces at [barryallen16/fitcheck](https://huggingface.co/spaces/barryallen16/fitcheck), serving Task A attribute extraction and Task B outfit compatibility scoring.
+
+* **Edge / Local Model**:
+Quantized [Qwen3-VL-2B-Instruct GGUF](https://huggingface.co/barryallen16/FitCheck-Qwen3-VL-Stylist-GGUF) for on-device or local network inference via LM Studio.
+
+* **Hugging Face Collection**:
+Training datasets, fine-tuned weights, and spaces are indexed in the [FitCheck collection](https://huggingface.co/collections/barryallen16/fitcheck).
 
 ## How it works
 
-The app catalogs garment photos and tags attributes such as color, category, style, and occasion using vision-language models.
+The app catalogs garment photos and tags attributes such as color, category, style, and occasion using vision-language models (Task A).
 Outfit generation combines these tags with real-time local weather fetched from Open-Meteo.
+The stylist model evaluates garment combinations and scores compatibility (Task B).
 Recommendations run against the hosted Hugging Face Space API by default.
 You can switch to a local LM Studio instance running on your machine whenever you want an offline or self-hosted setup.
-Wardrobe items, outfits, style personas, and image caches remain on your device using AsyncStorage and local filesystem storage.
+Wardrobe items, outfits, and image caches remain on your device using AsyncStorage and local filesystem storage.
 
 ## Project structure
 
@@ -38,6 +58,7 @@ FitCheck/
 ├── app.json
 ├── package.json
 ├── assets/
+│   └── fonts/
 └── src/
     ├── components/
     ├── config/

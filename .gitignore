@@ -41,3 +41,5 @@ yarn-error.*
 /ios
 /android
 emulator_screenshot.png
+
+*.apk

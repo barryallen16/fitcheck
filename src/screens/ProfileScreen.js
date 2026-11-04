@@ -1,64 +1,58 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '../context/AppContext';
-import PersonaBar from '../components/PersonaBar';
+import PixelIcon from '../components/PixelIcon';
 import ErrorBanner from '../components/ErrorBanner';
-import { COLORS, TYPE, GAP, RAD } from '../constants/theme';
-
-const W = Dimensions.get('window').width;
+import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 
 export default function ProfileScreen({ navigation }) {
-  const { active, fullBodyPhoto, setFullBodyPhoto, gender, setGender, outfits, wardrobe } = useApp();
+  const { gender, setGender, outfits, wardrobe, clearWardrobe } = useApp();
   const [banner, setBanner] = useState(null);
-
-  async function pickPhoto() {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') { setBanner({ message: 'Permission required', type: 'error' }); return; }
-      const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
-      if (!r.canceled && r.assets?.[0]) await setFullBodyPhoto(r.assets[0].uri);
-    } catch (e) { setBanner({ message: `Error: ${e.message}`, type: 'error' }); }
-  }
-
-  async function takePhoto() {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') { setBanner({ message: 'Permission required', type: 'error' }); return; }
-      const r = await ImagePicker.launchCameraAsync({ quality: 0.8 });
-      if (!r.canceled && r.assets?.[0]) await setFullBodyPhoto(r.assets[0].uri);
-    } catch (e) { setBanner({ message: `Error: ${e.message}`, type: 'error' }); }
-  }
-
-  function removePhoto() {
-    Alert.alert('Remove Photo', 'Remove your full-body photo?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => setFullBodyPhoto(null) },
-    ]);
-  }
 
   const wornCount = (outfits || []).filter((o) => o.status === 'worn').length;
   const garmentCount = (wardrobe || []).length;
+  const outfitCount = (outfits || []).length;
 
   return (
     <SafeAreaView style={s.c} edges={['top']}>
       {banner && <ErrorBanner message={banner.message} type={banner.type} onDismiss={() => setBanner(null)} />}
-      <PersonaBar />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={s.title}>{active?.name || 'Profile'}</Text>
+        {/* Header */}
+        <View style={s.hdrRow}>
+          <Text style={s.title}>PROFILE</Text>
+        </View>
+
+        {/* User Card */}
+        <View style={s.userCard}>
+          <View style={s.avatarWrap}>
+            <PixelIcon name="user" size={32} color={COLORS.primary} />
+          </View>
+          <View style={{ flex: 1, marginLeft: GAP.md }}>
+            <Text style={s.userName}>Personal Closet</Text>
+            <Text style={s.userSub}>AI Stylist Profile</Text>
+          </View>
+        </View>
 
         {/* Stats */}
         <View style={s.statsRow}>
-          <View style={s.stat}><Text style={s.statNum}>{garmentCount}</Text><Text style={s.statLbl}>Garments</Text></View>
-          <View style={s.stat}><Text style={s.statNum}>{(outfits || []).length}</Text><Text style={s.statLbl}>Outfits</Text></View>
-          <View style={s.stat}><Text style={s.statNum}>{wornCount}</Text><Text style={s.statLbl}>Worn</Text></View>
+          <View style={s.statBox}>
+            <Text style={s.statNum}>{garmentCount}</Text>
+            <Text style={s.statLbl}>Garments</Text>
+          </View>
+          <View style={s.statBox}>
+            <Text style={[s.statNum, { color: COLORS.secondary }]}>{outfitCount}</Text>
+            <Text style={s.statLbl}>Outfits</Text>
+          </View>
+          <View style={s.statBox}>
+            <Text style={[s.statNum, { color: COLORS.green }]}>{wornCount}</Text>
+            <Text style={s.statLbl}>Worn</Text>
+          </View>
         </View>
 
         {/* ─── Gender Selection ─────────────────────── */}
-        <Text style={s.secLabel}>Gender</Text>
-        <Text style={s.secHint}>Helps tailor recommendations to your style</Text>
+        <Text style={s.secLabel}>STYLE PREFERENCE</Text>
+        <Text style={s.secHint}>Tailors recommendation silhouettes and occasion pairings</Text>
 
         <View style={s.genderRow}>
           <TouchableOpacity
@@ -66,17 +60,15 @@ export default function ProfileScreen({ navigation }) {
             onPress={() => setGender('male')}
             activeOpacity={0.7}
           >
-            <View style={[s.genderIcon, gender === 'male' && s.genderIconActive]}>
-              <Ionicons
-                name="man"
-                size={28}
-                color={gender === 'male' ? COLORS.bg : COLORS.textMuted}
-              />
-            </View>
-            <Text style={[s.genderTxt, gender === 'male' && s.genderTxtActive]}>Male</Text>
+            <PixelIcon
+              name="user"
+              size={24}
+              color={gender === 'male' ? COLORS.primary : COLORS.textDim}
+            />
+            <Text style={[s.genderTxt, gender === 'male' && s.genderTxtActive]}>Men's Style</Text>
             {gender === 'male' && (
               <View style={s.genderCheck}>
-                <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
+                <PixelIcon name="check" size={14} color={COLORS.primary} />
               </View>
             )}
           </TouchableOpacity>
@@ -86,66 +78,38 @@ export default function ProfileScreen({ navigation }) {
             onPress={() => setGender('female')}
             activeOpacity={0.7}
           >
-            <View style={[s.genderIcon, gender === 'female' && s.genderIconActive]}>
-              <Ionicons
-                name="woman"
-                size={28}
-                color={gender === 'female' ? COLORS.bg : COLORS.textMuted}
-              />
-            </View>
-            <Text style={[s.genderTxt, gender === 'female' && s.genderTxtActive]}>Female</Text>
+            <PixelIcon
+              name="user"
+              size={24}
+              color={gender === 'female' ? COLORS.primary : COLORS.textDim}
+            />
+            <Text style={[s.genderTxt, gender === 'female' && s.genderTxtActive]}>Women's Style</Text>
             {gender === 'female' && (
               <View style={s.genderCheck}>
-                <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
+                <PixelIcon name="check" size={14} color={COLORS.primary} />
               </View>
             )}
           </TouchableOpacity>
         </View>
 
-        {!gender && (
-          <View style={s.genderWarn}>
-            <Ionicons name="warning-outline" size={16} color={COLORS.orange} />
-            <Text style={s.genderWarnTxt}>Please select your gender for tailored recommendations</Text>
-          </View>
-        )}
+        {/* Actions / Data Management */}
+        <Text style={[s.secLabel, { marginTop: GAP.xl }]}>DATA MANAGEMENT</Text>
 
-        {/* ─── Full Body Photo ──────────────────────── */}
-        <Text style={[s.secLabel, { marginTop: GAP.xl }]}>Profile Photo</Text>
-        <Text style={s.secHint}>Personalize your profile</Text>
+        <TouchableOpacity
+          style={s.dangerBtn}
+          onPress={() => Alert.alert('Clear Wardrobe', 'Remove all garments from your wardrobe?', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Clear All', style: 'destructive', onPress: clearWardrobe },
+          ])}
+          activeOpacity={0.7}
+        >
+          <PixelIcon name="trash" size={18} color={COLORS.red} />
+          <Text style={s.dangerTxt}>Clear Wardrobe Items</Text>
+        </TouchableOpacity>
 
-        {fullBodyPhoto ? (
-          <View style={s.photoWrap}>
-            <Image source={{ uri: fullBodyPhoto }} style={s.photo} resizeMode="cover" />
-            <View style={s.photoActions}>
-              <TouchableOpacity style={s.photoBtn} onPress={pickPhoto}>
-                <Ionicons name="camera-reverse-outline" size={18} color={COLORS.primary} />
-                <Text style={s.photoBtnTxt}>Change</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.photoBtn} onPress={removePhoto}>
-                <Ionicons name="trash-outline" size={18} color={COLORS.red} />
-                <Text style={[s.photoBtnTxt, { color: COLORS.red }]}>Remove</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <View style={s.uploadRow}>
-            <TouchableOpacity style={s.uploadBtn} onPress={pickPhoto}>
-              <Ionicons name="images-outline" size={32} color={COLORS.primary} />
-              <Text style={s.uploadTxt}>Gallery</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.uploadBtn} onPress={takePhoto}>
-              <Ionicons name="camera-outline" size={32} color={COLORS.primary} />
-              <Text style={s.uploadTxt}>Camera</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Info */}
-        <View style={s.infoCard}>
-          <Ionicons name="information-circle-outline" size={18} color={COLORS.textMuted} />
-          <Text style={s.infoTxt}>
-            Each persona has their own wardrobe, outfits, body photo, and gender setting. Long-press a persona chip to rename or delete.
-          </Text>
+        {/* App Version Tag */}
+        <View style={s.verBox}>
+          <Text style={s.verTxt}>FitCheck v1.0.0 · Qwen3-VL 2B Stylist</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -154,79 +118,149 @@ export default function ProfileScreen({ navigation }) {
 
 const s = StyleSheet.create({
   c: { flex: 1, backgroundColor: COLORS.bg },
-  scroll: { paddingHorizontal: GAP.xl, paddingBottom: GAP.huge },
-  title: { color: COLORS.text, fontSize: TYPE.xxl, fontWeight: '800', marginTop: GAP.lg, marginBottom: GAP.lg },
+  scroll: { paddingHorizontal: GAP.lg, paddingBottom: GAP.huge },
 
-  statsRow: { flexDirection: 'row', gap: GAP.sm, marginBottom: GAP.xl },
-  stat: {
-    flex: 1, backgroundColor: COLORS.card, borderRadius: RAD.md,
-    paddingVertical: GAP.md, alignItems: 'center',
-    borderWidth: 1, borderColor: COLORS.border,
+  hdrRow: { marginTop: GAP.lg, marginBottom: GAP.md },
+  title: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.text,
+    fontSize: TYPE.xl,
+    letterSpacing: 1.5,
   },
-  statNum: { color: COLORS.primary, fontSize: TYPE.xl, fontWeight: '800' },
-  statLbl: { color: COLORS.textDim, fontSize: 10, marginTop: 2, textTransform: 'uppercase' },
 
-  secLabel: { color: COLORS.textDim, fontSize: TYPE.xs, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: GAP.xs },
-  secHint: { color: COLORS.textMuted, fontSize: TYPE.xs, marginBottom: GAP.md },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: GAP.lg,
+  },
+  avatarWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: RAD.sm,
+    backgroundColor: COLORS.cardLight,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userName: {
+    fontFamily: FONTS.bold,
+    fontSize: TYPE.base,
+    color: COLORS.text,
+  },
+  userSub: {
+    fontFamily: FONTS.regular,
+    fontSize: TYPE.xs,
+    color: COLORS.textDim,
+    marginTop: 2,
+  },
 
-  // Gender
-  genderRow: { flexDirection: 'row', gap: GAP.md, marginBottom: GAP.md },
+  statsRow: {
+    flexDirection: 'row',
+    gap: GAP.sm,
+    marginBottom: GAP.xl,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    paddingVertical: GAP.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  statNum: {
+    fontFamily: FONTS.bold,
+    fontSize: TYPE.xl,
+    color: COLORS.primary,
+  },
+  statLbl: {
+    fontFamily: FONTS.regular,
+    fontSize: TYPE.xs,
+    color: COLORS.textDim,
+    marginTop: 2,
+    textTransform: 'uppercase',
+  },
+
+  secLabel: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.textDim,
+    fontSize: TYPE.xs,
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  secHint: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textMuted,
+    fontSize: TYPE.xs,
+    marginBottom: GAP.md,
+  },
+
+  genderRow: {
+    flexDirection: 'row',
+    gap: GAP.md,
+    marginBottom: GAP.lg,
+  },
   genderBtn: {
-    flex: 1, alignItems: 'center', backgroundColor: COLORS.card,
-    borderRadius: RAD.lg, paddingVertical: GAP.xl,
-    borderWidth: 2, borderColor: COLORS.border,
-    position: 'relative',
+    flex: 1,
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    paddingVertical: GAP.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    minHeight: 56,
+    gap: GAP.xs,
   },
   genderActive: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.primaryGlow,
-  },
-  genderIcon: {
-    width: 56, height: 56, borderRadius: 28,
     backgroundColor: COLORS.cardLight,
-    justifyContent: 'center', alignItems: 'center',
-    marginBottom: GAP.md,
-  },
-  genderIconActive: {
-    backgroundColor: COLORS.primary,
   },
   genderTxt: {
-    color: COLORS.textDim, fontSize: TYPE.base, fontWeight: '600',
+    fontFamily: FONTS.medium,
+    color: COLORS.textDim,
+    fontSize: TYPE.sm,
   },
   genderTxtActive: {
-    color: COLORS.primary, fontWeight: '700',
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   genderCheck: {
-    position: 'absolute', top: GAP.sm, right: GAP.sm,
+    position: 'absolute',
+    top: 8,
+    right: 8,
   },
-  genderWarn: {
-    flexDirection: 'row', alignItems: 'center', gap: GAP.sm,
-    backgroundColor: COLORS.orange + '10', borderRadius: RAD.md,
-    padding: GAP.md, marginBottom: GAP.md,
-    borderWidth: 1, borderColor: COLORS.orange + '25',
-  },
-  genderWarnTxt: { flex: 1, color: COLORS.orange, fontSize: TYPE.xs },
 
-  // Photo
-  photoWrap: { marginBottom: GAP.lg },
-  photo: { width: W - GAP.xl * 2, height: (W - GAP.xl * 2) * 1.3, borderRadius: RAD.lg, backgroundColor: COLORS.cardLight },
-  photoActions: { flexDirection: 'row', justifyContent: 'center', gap: GAP.xl, marginTop: GAP.md },
-  photoBtn: { flexDirection: 'row', alignItems: 'center', gap: GAP.sm, padding: GAP.sm },
-  photoBtnTxt: { color: COLORS.primary, fontSize: TYPE.sm, fontWeight: '600' },
-
-  uploadRow: { flexDirection: 'row', gap: GAP.md, marginBottom: GAP.lg },
-  uploadBtn: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.primaryGlow, borderRadius: RAD.lg,
-    paddingVertical: GAP.xxxl, gap: GAP.sm,
-    borderWidth: 1, borderColor: COLORS.primaryMuted, borderStyle: 'dashed',
+  dangerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    gap: GAP.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    minHeight: 48,
   },
-  uploadTxt: { color: COLORS.primary, fontSize: TYPE.sm, fontWeight: '600' },
-
-  infoCard: {
-    flexDirection: 'row', gap: GAP.sm, backgroundColor: COLORS.card,
-    borderRadius: RAD.md, padding: GAP.md, marginTop: GAP.xl,
-    borderWidth: 1, borderColor: COLORS.border,
+  dangerTxt: {
+    fontFamily: FONTS.medium,
+    color: COLORS.red,
+    fontSize: TYPE.sm,
   },
-  infoTxt: { flex: 1, color: COLORS.textMuted, fontSize: TYPE.xs, lineHeight: 16 },
+
+  verBox: {
+    alignItems: 'center',
+    paddingVertical: GAP.xxl,
+  },
+  verTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.textMuted,
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
 });

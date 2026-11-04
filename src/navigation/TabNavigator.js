@@ -1,8 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, TYPE } from '../constants/theme';
+import PixelIcon from '../components/PixelIcon';
+import { COLORS, TYPE, FONTS } from '../constants/theme';
 
 import HomeScreen from '../screens/HomeScreen';
 import WardrobeScreen from '../screens/WardrobeScreen';
@@ -65,23 +65,33 @@ export default function TabNavigator() {
           backgroundColor: COLORS.tabBar,
           borderTopColor: COLORS.border,
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 6,
-          paddingTop: 6,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.tabInactive,
-        tabBarLabelStyle: { fontSize: TYPE.xs, fontWeight: '600' },
+        tabBarLabelStyle: {
+          fontFamily: FONTS.pixel,
+          fontSize: 9,
+          letterSpacing: 1,
+          marginTop: 2,
+        },
         tabBarIcon: ({ color }) => {
-          const map = { Home: 'home-outline', Wardrobe: 'shirt-outline', Style: 'sparkles-outline', Me: 'person-outline' };
-          return <Ionicons name={map[route.name]} size={22} color={color} />;
+          const map = {
+            Home: 'sliders',
+            Wardrobe: 'briefcase',
+            Style: 'sparkles',
+            Me: 'user',
+          };
+          return <PixelIcon name={map[route.name] || 'sparkles'} size={22} color={color} />;
         },
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Wardrobe" component={WardrobeStack} />
       <Tab.Screen name="Style" component={StyleStack} />
-      <Tab.Screen name="Me" component={ProfileStack} />
+      <Tab.Screen name="Me" component={ProfileStack} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 }

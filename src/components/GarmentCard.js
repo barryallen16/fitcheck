@@ -1,19 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, TYPE, GAP, RAD } from '../constants/theme';
-
-const CAT_CLR = {
-  Kurti:'#FF8A65', Lehenga:'#CE93D8', Dupatta:'#80CBC4', Palazzo:'#90CAF9',
-  Churidar:'#A5D6A7', Salwar:'#FFE082', Saree:'#EF5350', Sherwani:'#7986CB',
-  Anarkali:'#F48FB1', Dress:'#80DEEA', Gown:'#B39DDB', Skirt:'#FFAB91',
-  Jeans:'#64B5F6', Pants:'#81C784', Bottom:'#81C784', Trousers:'#81C784',
-  Blazer:'#FFD54F', Jacket:'#4DD0E1', Top:'#FF8A80', 'T-Shirt':'#FF8A80', Shirt:'#82B1FF',
-};
+import PixelIcon from './PixelIcon';
+import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 
 export default function GarmentCard({ garment, onPress, onDelete, isSelected, selectable }) {
-  const cc = CAT_CLR[garment.category] || COLORS.primary;
-
   return (
     <TouchableOpacity
       style={[s.card, isSelected && s.selected]}
@@ -22,15 +12,15 @@ export default function GarmentCard({ garment, onPress, onDelete, isSelected, se
     >
       {selectable && (
         <View style={[s.check, isSelected && { backgroundColor: COLORS.primary, borderColor: COLORS.primary }]}>
-          {isSelected && <Ionicons name="checkmark" size={13} color={COLORS.bg} />}
+          {isSelected && <PixelIcon name="check" size={12} color="#0B0C10" />}
         </View>
       )}
 
       <Image source={{ uri: garment.imageUri }} style={s.img} />
 
       <View style={s.info}>
-        <View style={[s.badge, { backgroundColor: cc + '22' }]}>
-          <Text style={[s.badgeTxt, { color: cc }]}>{garment.category}</Text>
+        <View style={s.badge}>
+          <Text style={s.badgeTxt}>{garment.category}</Text>
         </View>
         <Text style={s.title} numberOfLines={2}>{garment.summary}</Text>
         <Text style={s.desc} numberOfLines={2}>{garment.analyzed_garment}</Text>
@@ -40,9 +30,9 @@ export default function GarmentCard({ garment, onPress, onDelete, isSelected, se
         <TouchableOpacity
           style={s.del}
           onPress={() => onDelete(garment.id)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Ionicons name="trash-outline" size={17} color={COLORS.red} />
+          <PixelIcon name="trash" size={16} color={COLORS.red} />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -51,21 +41,75 @@ export default function GarmentCard({ garment, onPress, onDelete, isSelected, se
 
 const s = StyleSheet.create({
   card: {
-    flexDirection: 'row', backgroundColor: COLORS.card, borderRadius: RAD.lg,
-    padding: GAP.md, marginBottom: GAP.md, borderWidth: 1, borderColor: COLORS.border,
+    flexDirection: 'row',
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    marginBottom: GAP.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     alignItems: 'center',
   },
-  selected: { borderColor: COLORS.primary, backgroundColor: COLORS.primaryGlow },
-  check: {
-    position: 'absolute', top: GAP.sm, left: GAP.sm, width: 21, height: 21,
-    borderRadius: 11, borderWidth: 2, borderColor: COLORS.textMuted, zIndex: 5,
-    justifyContent: 'center', alignItems: 'center',
+  selected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.cardLight,
   },
-  img: { width: 76, height: 76, borderRadius: RAD.md, backgroundColor: COLORS.cardLight },
-  info: { flex: 1, marginLeft: GAP.md },
-  badge: { alignSelf: 'flex-start', paddingHorizontal: GAP.sm, paddingVertical: 2, borderRadius: RAD.sm, marginBottom: GAP.xs },
-  badgeTxt: { fontSize: TYPE.xs, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  title: { color: COLORS.text, fontSize: TYPE.base, fontWeight: '600', marginBottom: GAP.xs },
-  desc: { color: COLORS.textDim, fontSize: TYPE.xs, lineHeight: 16 },
-  del: { padding: GAP.sm, marginLeft: GAP.sm },
+  check: {
+    position: 'absolute',
+    top: GAP.sm,
+    left: GAP.sm,
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: COLORS.textMuted,
+    zIndex: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  img: {
+    width: 72,
+    height: 72,
+    borderRadius: RAD.sm,
+    backgroundColor: COLORS.cardLight,
+  },
+  info: {
+    flex: 1,
+    marginLeft: GAP.md,
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: GAP.sm,
+    paddingVertical: 1,
+    borderRadius: RAD.xs,
+    backgroundColor: COLORS.cardLight,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 4,
+  },
+  badgeTxt: {
+    fontFamily: FONTS.pixel,
+    fontSize: 9,
+    color: COLORS.primary,
+    letterSpacing: 0.5,
+  },
+  title: {
+    fontFamily: FONTS.bold,
+    color: COLORS.text,
+    fontSize: TYPE.sm,
+    marginBottom: 2,
+  },
+  desc: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: TYPE.xs,
+    lineHeight: 16,
+  },
+  del: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: GAP.xs,
+  },
 });

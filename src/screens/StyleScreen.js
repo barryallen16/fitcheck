@@ -1,55 +1,94 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import PersonaBar from '../components/PersonaBar';
-import { COLORS, TYPE, GAP, RAD } from '../constants/theme';
+import PixelIcon from '../components/PixelIcon';
+import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 import { getMaxOutfits, getUnusedCombinations } from '../utils/helpers';
 
 export default function StyleScreen({ navigation }) {
-  const { wardrobe, outfits, serverOk } = useApp();
-  const max = getMaxOutfits(wardrobe);
+  const { wardrobe, outfits } = useApp();
   const unused = getUnusedCombinations(wardrobe, outfits).length;
   const worn = outfits.filter((o) => o.status === 'worn').length;
 
   return (
     <SafeAreaView style={s.c} edges={['top']}>
-      <PersonaBar />
-      <ScrollView contentContainerStyle={s.scroll}>
-        <Text style={s.title}>Style</Text>
-
-        <View style={s.statsRow}>
-          <View style={s.stat}><Text style={s.statNum}>{outfits.length}</Text><Text style={s.statLbl}>Generated</Text></View>
-          <View style={s.stat}><Text style={s.statNum}>{unused}</Text><Text style={s.statLbl}>Remaining</Text></View>
-          <View style={s.stat}><Text style={s.statNum}>{worn}</Text><Text style={s.statLbl}>Worn</Text></View>
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={s.hdr}>
+          <Text style={s.title}>STYLE LAB</Text>
+          <Text style={s.subTitle}>AI-curated outfit recommendations</Text>
         </View>
 
-        <TouchableOpacity style={s.mainBtn} onPress={() => navigation.navigate('Recommendation')} activeOpacity={0.8}>
-          <Ionicons name="sparkles" size={28} color={COLORS.bg} />
-          <View style={{ flex: 1 }}>
-            <Text style={s.mainTxt}>Get Outfit Recommendation</Text>
-            <Text style={s.mainSub}>{unused > 0 ? `${unused} combinations available` : wardrobe.length < 2 ? 'Add more garments first' : 'All combos generated!'}</Text>
+        {/* Stats */}
+        <View style={s.statsRow}>
+          <View style={s.stat}>
+            <Text style={s.statNum}>{outfits.length}</Text>
+            <Text style={s.statLbl}>Generated</Text>
           </View>
-          <Ionicons name="chevron-forward" size={22} color={COLORS.bg} />
+          <View style={s.stat}>
+            <Text style={[s.statNum, { color: COLORS.secondary }]}>{unused}</Text>
+            <Text style={s.statLbl}>Unused</Text>
+          </View>
+          <View style={s.stat}>
+            <Text style={[s.statNum, { color: COLORS.green }]}>{worn}</Text>
+            <Text style={s.statLbl}>Worn</Text>
+          </View>
+        </View>
+
+        {/* Primary CTA (Von Restorff Effect) */}
+        <TouchableOpacity
+          style={s.mainBtn}
+          onPress={() => navigation.navigate('Recommendation')}
+          activeOpacity={0.8}
+        >
+          <View style={s.mainIconBox}>
+            <PixelIcon name="sparkles" size={24} color="#0B0C10" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.mainTxt}>GET OUTFIT RECOMMENDATION</Text>
+            <Text style={s.mainSub}>
+              {unused > 0
+                ? `${unused} fresh combinations ready`
+                : wardrobe.length < 2
+                ? 'Scan at least 1 top and 1 bottom'
+                : 'All pairs generated! Tap to regenerate'}
+            </Text>
+          </View>
+          <PixelIcon name="chevron-right" size={20} color="#0B0C10" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={s.secBtn} onPress={() => navigation.navigate('OutfitHistory')} activeOpacity={0.8}>
-          <Ionicons name="layers-outline" size={22} color={COLORS.accent} />
-          <View style={{ flex: 1 }}>
-            <Text style={s.secTxt}>Outfit History</Text>
-            <Text style={s.secSub}>{outfits.length} outfits saved</Text>
+        {/* Secondary Navigation Options */}
+        <Text style={s.secHeader}>OUTFIT ARCHIVE</Text>
+
+        <TouchableOpacity
+          style={s.secBtn}
+          onPress={() => navigation.navigate('OutfitHistory')}
+          activeOpacity={0.7}
+        >
+          <View style={s.secIconBox}>
+            <PixelIcon name="sparkles" size={20} color={COLORS.secondary} />
           </View>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
+          <View style={{ flex: 1 }}>
+            <Text style={s.secTxt}>OUTFIT HISTORY</Text>
+            <Text style={s.secSub}>{outfits.length} generated combinations saved</Text>
+          </View>
+          <PixelIcon name="chevron-right" size={18} color={COLORS.textDim} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={s.secBtn} onPress={() => navigation.navigate('OutfitCalendar')} activeOpacity={0.8}>
-          <Ionicons name="calendar-outline" size={22} color={COLORS.primary} />
-          <View style={{ flex: 1 }}>
-            <Text style={s.secTxt}>Outfit Calendar</Text>
-            <Text style={s.secSub}>Track what you wore</Text>
+        <TouchableOpacity
+          style={s.secBtn}
+          onPress={() => navigation.navigate('OutfitCalendar')}
+          activeOpacity={0.7}
+        >
+          <View style={s.secIconBox}>
+            <PixelIcon name="calendar" size={20} color={COLORS.secondary} />
           </View>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
+          <View style={{ flex: 1 }}>
+            <Text style={s.secTxt}>OUTFIT CALENDAR</Text>
+            <Text style={s.secSub}>Track wear history across dates</Text>
+          </View>
+          <PixelIcon name="chevron-right" size={18} color={COLORS.textDim} />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -58,16 +97,114 @@ export default function StyleScreen({ navigation }) {
 
 const s = StyleSheet.create({
   c: { flex: 1, backgroundColor: COLORS.bg },
-  scroll: { paddingHorizontal: GAP.xl, paddingBottom: GAP.huge },
-  title: { color: COLORS.text, fontSize: TYPE.xxl, fontWeight: '800', marginTop: GAP.lg, marginBottom: GAP.lg },
+  scroll: { paddingHorizontal: GAP.lg, paddingBottom: GAP.huge },
+
+  hdr: { paddingTop: GAP.lg, marginBottom: GAP.lg },
+  title: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.text,
+    fontSize: TYPE.xl,
+    letterSpacing: 1.5,
+  },
+  subTitle: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: TYPE.xs,
+    marginTop: 2,
+  },
+
   statsRow: { flexDirection: 'row', gap: GAP.sm, marginBottom: GAP.xl },
-  stat: { flex: 1, backgroundColor: COLORS.card, borderRadius: RAD.md, paddingVertical: GAP.lg, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
-  statNum: { color: COLORS.primary, fontSize: TYPE.xl, fontWeight: '800' },
-  statLbl: { color: COLORS.textDim, fontSize: TYPE.xs, marginTop: 2, textTransform: 'uppercase' },
-  mainBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.primary, borderRadius: RAD.lg, padding: GAP.lg, gap: GAP.md, marginBottom: GAP.md },
-  mainTxt: { color: COLORS.bg, fontSize: TYPE.lg, fontWeight: '700' },
-  mainSub: { color: COLORS.bg, fontSize: TYPE.xs, opacity: 0.7, marginTop: 2 },
-  secBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: RAD.lg, padding: GAP.lg, gap: GAP.md, marginBottom: GAP.md, borderWidth: 1, borderColor: COLORS.border },
-  secTxt: { color: COLORS.text, fontSize: TYPE.lg, fontWeight: '600' },
-  secSub: { color: COLORS.textDim, fontSize: TYPE.xs, marginTop: 2 },
+  stat: {
+    flex: 1,
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    paddingVertical: GAP.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  statNum: {
+    fontFamily: FONTS.bold,
+    fontSize: TYPE.xl,
+    color: COLORS.primary,
+  },
+  statLbl: {
+    fontFamily: FONTS.regular,
+    fontSize: TYPE.xs,
+    color: COLORS.textDim,
+    marginTop: 2,
+    textTransform: 'uppercase',
+  },
+
+  mainBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: RAD.md,
+    padding: GAP.lg,
+    gap: GAP.md,
+    marginBottom: GAP.xl,
+    minHeight: 64,
+  },
+  mainIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: RAD.sm,
+    backgroundColor: 'rgba(11, 12, 16, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mainTxt: {
+    fontFamily: FONTS.pixel,
+    color: '#0B0C10',
+    fontSize: TYPE.sm,
+    letterSpacing: 1,
+  },
+  mainSub: {
+    fontFamily: FONTS.regular,
+    color: '#0B0C10',
+    fontSize: TYPE.xs,
+    opacity: 0.85,
+    marginTop: 2,
+  },
+
+  secHeader: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.textDim,
+    fontSize: 10,
+    letterSpacing: 1,
+    marginBottom: GAP.sm,
+  },
+  secBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    gap: GAP.md,
+    marginBottom: GAP.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    minHeight: 56,
+  },
+  secIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: RAD.sm,
+    backgroundColor: COLORS.cardLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  secTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.text,
+    fontSize: TYPE.xs,
+    letterSpacing: 1,
+  },
+  secSub: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: TYPE.xs,
+    marginTop: 2,
+  },
 });
