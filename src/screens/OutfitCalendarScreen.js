@@ -83,7 +83,7 @@ export default function OutfitCalendarScreen({ navigation }) {
                           <Image source={{ uri: botG.imageUri }} style={s.outfitImg} />
                         ) : (
                           <View style={[s.outfitImg, s.ph]}>
-                            <PixelIcon name="sparkles" size={16} color={COLORS.textMuted} />
+                            <PixelIcon name="shirt" size={16} color={COLORS.textMuted} />
                           </View>
                         )
                       )}

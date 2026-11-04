@@ -1,43 +1,44 @@
 export const COLORS = {
-  // Backgrounds (Clean, disciplined dark ramp - unslopped)
-  bg: '#0B0C10',
-  card: '#13141A',
-  cardLight: '#1A1B23',
-  cardHover: '#232530',
+  // Comic Book Panel Inks & Gutters
+  bg: '#0B0C12', // Gutter / deep canvas
+  card: '#151722', // Story panel surface
+  cardLight: '#1E2130', // Inset box / active panel
+  cardHover: '#272B3E', // Elevated surface
 
-  // Accents requested by user
-  primary: '#D83995', // Hot Pink
+  // Core Anchors requested by user
+  primary: '#D83995', // Action Magenta / Hot Pink
   primaryMuted: '#9B2369',
-  primaryGlow: 'rgba(216, 57, 149, 0.08)',
+  primaryGlow: 'rgba(216, 57, 149, 0.10)',
 
-  secondary: '#0593C6', // Sky Blue
+  secondary: '#0593C6', // Electric Cyan / Sky Blue
   secondaryMuted: '#046B90',
-  accent: '#0593C6', // Sky Blue secondary accent
+  accent: '#0593C6',
   accentMuted: '#046B90',
-  accentGlow: 'rgba(5, 147, 198, 0.08)',
+  accentGlow: 'rgba(5, 147, 198, 0.10)',
 
-  // Status & semantic tones
-  red: '#F43F5E',
-  redMuted: '#9F1239',
-  green: '#34D399',
-  orange: '#FB923C',
-  purple: '#A855F7',
+  // Comic CMYK & Ben-Day Accent Tones
+  yellow: '#FFD400', // Action Yellow / POW Gold
+  orange: '#FFD400', // Warning & bright highlight
+  green: '#10B981', // Panel Green / success status
+  red: '#EF4444', // Impact Red / alert & destructive
+  redMuted: '#991B1B',
+  purple: '#7A5AF8', // Shadow Violet
 
-  // Typography ramp
-  text: '#E6E7EB',
-  textDim: '#8E909B',
-  textMuted: '#555761',
+  // Comic Dialogue Typography Ramp
+  text: '#FCFFFF', // Comic White
+  textDim: '#A0A5B8', // Newsprint Silver
+  textMuted: '#656B80', // Pencil Gray
 
-  // Borders (hairlines, no heavy neon borders)
-  border: '#22232A',
-  borderLight: '#2E303A',
+  // Inked Panel Hairlines
+  border: '#2D3245',
+  borderLight: '#3A4058',
   borderActive: '#D83995',
 
-  overlay: 'rgba(11, 12, 16, 0.85)',
-  white: '#FFFFFF',
+  overlay: 'rgba(11, 12, 18, 0.88)',
+  white: '#FCFFFF',
   black: '#000000',
-  tabBar: '#0E0F14',
-  tabInactive: '#555761',
+  tabBar: '#0B0C12',
+  tabInactive: '#656B80',
 };
 
 export const FONTS = {

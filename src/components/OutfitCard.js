@@ -27,7 +27,7 @@ export default function OutfitCard({ outfit, wardrobe, onWear, onUnwear, onDelet
             <Image source={{ uri: botG.imageUri }} style={s.img} />
           ) : (
             <View style={[s.img, s.ph]}>
-              <PixelIcon name="sparkles" size={18} color={COLORS.textMuted} />
+              <PixelIcon name="shirt" size={18} color={COLORS.textMuted} />
             </View>
           )
         )}

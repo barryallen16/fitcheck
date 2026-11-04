@@ -121,7 +121,7 @@ export default function OutfitDetailScreen({ route, navigation }) {
           {outfit.colorLogic ? (
             <View style={s.logicSec}>
               <View style={s.logicHdr}>
-                <PixelIcon name="sparkles" size={16} color={COLORS.primary} />
+                <PixelIcon name="sunglasses" size={16} color={COLORS.primary} />
                 <Text style={s.logicTitle}>COLOR LOGIC</Text>
               </View>
               <Text style={s.logicBody}>{outfit.colorLogic}</Text>

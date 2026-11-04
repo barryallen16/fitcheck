@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext';
 import GarmentCard from '../components/GarmentCard';
 import PixelIcon from '../components/PixelIcon';
 import ErrorBanner from '../components/ErrorBanner';
+import ConfirmModal from '../components/ConfirmModal';
 import { isTop, isBottom, isFullBody } from '../utils/helpers';
 import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 
@@ -21,6 +22,7 @@ export default function WardrobeScreen({ navigation }) {
   const { wardrobe, removeGarment, clearWardrobe, serverOk } = useApp();
   const [banner, setBanner] = useState(null);
   const [filter, setFilter] = useState('ALL');
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const counts = useMemo(() => ({
     ALL: wardrobe.length,
@@ -69,10 +71,15 @@ export default function WardrobeScreen({ navigation }) {
         {wardrobe.length > 0 && (
           <TouchableOpacity
             style={s.clearBtn}
-            onPress={() => Alert.alert('Clear All', 'Remove all garments?', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Clear', style: 'destructive', onPress: clearWardrobe }
-            ])}
+            onPress={() => setConfirmModal({
+              title: 'CLEAR WARDROBE',
+              message: 'Remove all garments from your wardrobe? This action cannot be reversed.',
+              confirmText: 'CLEAR ALL',
+              onConfirm: () => {
+                clearWardrobe();
+                setConfirmModal(null);
+              },
+            })}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <PixelIcon name="trash" size={18} color={COLORS.red} />
@@ -124,10 +131,15 @@ export default function WardrobeScreen({ navigation }) {
           <GarmentCard
             garment={item}
             onPress={() => navigation.navigate('GarmentDetail', { garment: item })}
-            onDelete={(id) => Alert.alert('Remove Garment?', '', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Remove', style: 'destructive', onPress: () => removeGarment(id) }
-            ])}
+            onDelete={(id) => setConfirmModal({
+              title: 'REMOVE GARMENT',
+              message: `Remove "${item.summary || 'item'}" from your wardrobe?`,
+              confirmText: 'REMOVE',
+              onConfirm: () => {
+                removeGarment(id);
+                setConfirmModal(null);
+              },
+            })}
           />
         )}
         ListEmptyComponent={
@@ -150,6 +162,14 @@ export default function WardrobeScreen({ navigation }) {
             </View>
           )
         }
+      />
+      <ConfirmModal
+        visible={!!confirmModal}
+        title={confirmModal?.title}
+        message={confirmModal?.message}
+        confirmText={confirmModal?.confirmText}
+        onConfirm={confirmModal?.onConfirm}
+        onCancel={() => setConfirmModal(null)}
       />
     </SafeAreaView>
   );

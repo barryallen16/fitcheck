@@ -22,12 +22,12 @@ const ALIASES = {
   'information-circle-outline': 'info-box',
   'warning-outline': 'info-box',
   'alert-circle': 'info-box',
-  'shirt-outline': 'briefcase',
-  'cut-outline': 'sparkles',
+  'shirt-outline': 'shirt',
+  'cut-outline': 'shirt',
   'shield-checkmark': 'shield',
-  'layers-outline': 'sparkles',
+  'layers-outline': 'shirt',
   'refresh-outline': 'refresh',
-  'color-palette-outline': 'sparkles',
+  'color-palette-outline': 'sunglasses',
   'body-outline': 'user',
   'person': 'user',
   'man': 'user',
@@ -41,11 +41,12 @@ const ALIASES = {
   'cloudy': 'cloud',
   'time-outline': 'clock',
   'search-outline': 'search',
+  'shades': 'sunglasses',
 };
 
 export default function PixelIcon({ name, size = 24, color = '#E6E7EB', style }) {
   const resolved = ALIASES[name] || name;
-  const paths = PIXEL_PATHS[resolved] || PIXEL_PATHS['sparkles'] || [];
+  const paths = PIXEL_PATHS[resolved] || PIXEL_PATHS['shirt'] || [];
 
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" style={style}>

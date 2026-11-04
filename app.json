@@ -2,13 +2,15 @@
   "expo": {
     "name": "FitCheck",
     "slug": "fitcheck",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/logo-placeholder-bk.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "backgroundColor": "#0e0e0e"
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0C12"
     },
     "ios": {
       "supportsTablet": false,

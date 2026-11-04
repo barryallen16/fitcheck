@@ -81,10 +81,10 @@ export default function TabNavigator() {
           const map = {
             Home: 'sliders',
             Wardrobe: 'briefcase',
-            Style: 'sparkles',
+            Style: 'sunglasses',
             Me: 'user',
           };
-          return <PixelIcon name={map[route.name] || 'sparkles'} size={22} color={color} />;
+          return <PixelIcon name={map[route.name] || 'shirt'} size={22} color={color} />;
         },
       })}
     >

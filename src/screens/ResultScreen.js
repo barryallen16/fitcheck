@@ -124,7 +124,7 @@ export default function ResultScreen({ route, navigation }) {
         <View style={s.logicCard}>
           <View style={s.logicSec}>
             <View style={s.logicHdr}>
-              <PixelIcon name="sparkles" size={14} color={COLORS.primary} />
+              <PixelIcon name="sunglasses" size={14} color={COLORS.primary} />
               <Text style={s.logicTitle}>COLOR HARMONY</Text>
             </View>
             <Text style={s.logicBody}>{rec.colorLogic}</Text>

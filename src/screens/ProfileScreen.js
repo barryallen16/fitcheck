@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext';
 import PixelIcon from '../components/PixelIcon';
 import ErrorBanner from '../components/ErrorBanner';
 import LegalModal from '../components/LegalModal';
+import ConfirmModal from '../components/ConfirmModal';
 import { exportBackupData, importBackupData } from '../services/backupService';
 import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 
@@ -22,6 +23,7 @@ export default function ProfileScreen({ navigation }) {
   const [connecting, setConnecting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   async function handleExportBackup() {
     try {
@@ -290,7 +292,7 @@ export default function ProfileScreen({ navigation }) {
             onPress={() => setLegalTab('compliance')}
             activeOpacity={0.7}
           >
-            <PixelIcon name="sparkles" size={18} color={COLORS.primary} />
+            <PixelIcon name="sunglasses" size={18} color={COLORS.primary} />
             <Text style={s.docTxt}>AI Transparency & Disclosure</Text>
             <PixelIcon name="chevron-right" size={16} color={COLORS.textDim} />
           </TouchableOpacity>
@@ -301,10 +303,7 @@ export default function ProfileScreen({ navigation }) {
 
         <TouchableOpacity
           style={s.dangerBtn}
-          onPress={() => Alert.alert('Clear Wardrobe', 'Remove all garments from your wardrobe?', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Clear All', style: 'destructive', onPress: clearWardrobe },
-          ])}
+          onPress={() => setShowClearConfirm(true)}
           activeOpacity={0.7}
         >
           <PixelIcon name="trash" size={18} color={COLORS.red} />
@@ -313,7 +312,7 @@ export default function ProfileScreen({ navigation }) {
 
         {/* App Version Tag */}
         <View style={s.verBox}>
-          <Text style={s.verTxt}>FitCheck v2.0.0 · Qwen3-VL 2B Stylist</Text>
+          <Text style={s.verTxt}>FitCheck v2.0.1 · Qwen3-VL 2B Stylist</Text>
         </View>
       </ScrollView>
 
@@ -321,6 +320,19 @@ export default function ProfileScreen({ navigation }) {
         visible={Boolean(legalTab)}
         initialTab={legalTab || 'privacy'}
         onClose={() => setLegalTab(null)}
+      />
+
+      <ConfirmModal
+        visible={showClearConfirm}
+        title="CLEAR WARDROBE"
+        message="Remove all garments from your wardrobe? This action cannot be reversed."
+        confirmText="CLEAR ALL"
+        onConfirm={() => {
+          clearWardrobe();
+          setShowClearConfirm(false);
+          setBanner({ type: 'success', message: 'Wardrobe cleared.' });
+        }}
+        onCancel={() => setShowClearConfirm(false)}
       />
     </SafeAreaView>
   );

@@ -9,6 +9,8 @@ import lm from '../services/lmStudioService';
 import weather from '../services/weatherService';
 import ErrorBanner from '../components/ErrorBanner';
 import BaseGarmentSelector from '../components/BaseGarmentSelector';
+import FitCheckLogo from '../components/FitCheckLogo';
+import ConfirmModal from '../components/ConfirmModal';
 import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 import { getSlotLabel, isTop, isBottom, isFullBody, getMaxOutfits, getUnusedCombinations } from '../utils/helpers';
 
@@ -27,6 +29,7 @@ export default function RecommendationScreen({ navigation }) {
   const [loadIdx, setLoadIdx] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [banner, setBanner] = useState(null);
+  const [showExhaustedModal, setShowExhaustedModal] = useState(false);
   const intervalRef = useRef(null);
   const timerRef = useRef(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -89,14 +92,7 @@ export default function RecommendationScreen({ navigation }) {
     if (topCount === 0) { setBanner({ message: 'Need at least 1 top garment', type: 'warning' }); return; }
 
     if (exhausted) {
-      Alert.alert(
-        'All Outfits Generated! 🎉',
-        `All ${maxOutfits} possible outfit combinations from your current wardrobe have been generated.\n\nCheck your Outfit History to browse and pick one!`,
-        [
-          { text: 'View History', onPress: () => navigation.navigate('OutfitHistory') },
-          { text: 'OK', style: 'cancel' },
-        ]
-      );
+      setShowExhaustedModal(true);
       return;
     }
 
@@ -133,11 +129,7 @@ export default function RecommendationScreen({ navigation }) {
             </View>
 
             <Animated.View style={[s.loadLogoBox, { transform: [{ scale: pulseAnim }], opacity: glowAnim }]}>
-              <Image
-                source={require('../../assets/logo.png')}
-                style={s.loadLogo}
-                resizeMode="contain"
-              />
+              <FitCheckLogo width={145} height={60} />
             </Animated.View>
 
             <Text style={s.loadMsg}>{LOAD_MSGS[loadIdx].msg.toUpperCase()}</Text>
@@ -274,7 +266,7 @@ export default function RecommendationScreen({ navigation }) {
           onPress={go}
           activeOpacity={0.8}
         >
-          <PixelIcon name="sparkles" size={22} color="#0B0C10" />
+          <PixelIcon name="shirt" size={22} color="#0B0C10" />
           <Text style={s.goTxt}>{exhausted ? 'ALL DONE!' : 'GENERATE OUTFIT'}</Text>
         </TouchableOpacity>
 
@@ -295,6 +287,20 @@ export default function RecommendationScreen({ navigation }) {
         selectedId={baseId}
         onSelect={setBaseId}
         onClose={() => setShowPicker(false)}
+      />
+
+      <ConfirmModal
+        visible={showExhaustedModal}
+        title="CATALOG COMPLETE"
+        message={`All ${maxOutfits} outfit combinations from your current wardrobe have been generated. Browse your archive to view or wear a look.`}
+        confirmText="VIEW ARCHIVE"
+        cancelText="DISMISS"
+        isDestructive={false}
+        onConfirm={() => {
+          setShowExhaustedModal(false);
+          navigation.navigate('OutfitHistory');
+        }}
+        onCancel={() => setShowExhaustedModal(false)}
       />
     </SafeAreaView>
   );

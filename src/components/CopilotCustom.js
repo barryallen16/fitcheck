@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useCopilot } from 'react-native-copilot';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import PixelIcon from './PixelIcon';
 import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 
 const STEP_TITLES = {
-  brand: 'FITCHECK OVERVIEW',
-  todayFit: 'WHAT TO WEAR TODAY',
-  endpoint: 'AI INFERENCE BACKEND',
-  stylist: 'DAILY OUTFIT MATCH',
-  metrics: 'WARDROBE TRACKING',
+  brand: 'SYSTEM OVERVIEW',
+  todayFit: 'DAILY ROTATION',
+  stylist: 'GENERATE FIT',
+  metrics: 'WARDROBE AUDIT',
 };
 
 export function CustomTooltip() {
@@ -28,52 +28,70 @@ export function CustomTooltip() {
 
   return (
     <View style={s.tooltipContainer}>
-      {/* Neon cyber accent top bar */}
-      <View style={s.accentBar} />
-
-      {/* Step header */}
+      {/* Top terminal status row */}
       <View style={s.headerRow}>
-        <View style={s.badge}>
-          <Text style={s.badgeTxt}>
-            STEP 0{currentStepNumber} / 0{totalStepsNumber}
+        <View style={s.stepTag}>
+          <Text style={s.stepTagTxt}>
+            [{String(currentStepNumber).padStart(2, '0')}/{String(totalStepsNumber).padStart(2, '0')}]
           </Text>
         </View>
+
         <TouchableOpacity
-          onPress={() => void stop()}
+          onPress={() => {
+            AsyncStorage.setItem('@fitcheck_tour_seen', 'true').catch(() => {});
+            void stop();
+          }}
           style={s.skipBtn}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityLabel="Skip walkthrough"
+          accessibilityRole="button"
         >
-          <Text style={s.skipTxt}>SKIP TOUR</Text>
+          <Text style={s.skipTxt}>[SKIP]</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Step title & description */}
+      {/* Step title */}
       <Text style={s.stepTitle}>{title}</Text>
+
+      {/* Step description */}
       <Text style={s.stepDesc}>{currentStep?.text}</Text>
 
-      {/* Navigation action buttons */}
+      {/* Footer navigation actions */}
       <View style={s.navRow}>
         {!isFirstStep && (
           <TouchableOpacity
             onPress={() => void goToPrev()}
             style={s.prevBtn}
             activeOpacity={0.7}
+            accessibilityLabel="Previous step"
+            accessibilityRole="button"
           >
-            <PixelIcon name="chevron-left" size={14} color={COLORS.textDim} />
-            <Text style={s.prevTxt}>PREV</Text>
+            <PixelIcon name="chevron-left" size={12} color={COLORS.textDim} />
+            <Text style={s.prevTxt}>[PREV]</Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
-          onPress={() => (isLastStep ? void stop() : void goToNext())}
+          onPress={() => {
+            if (isLastStep) {
+              AsyncStorage.setItem('@fitcheck_tour_seen', 'true').catch(() => {});
+              void stop();
+            } else {
+              void goToNext();
+            }
+          }}
           style={s.nextBtn}
-          activeOpacity={0.7}
+          activeOpacity={0.85}
+          accessibilityLabel={isLastStep ? 'Finish walkthrough' : 'Next step'}
+          accessibilityRole="button"
         >
-          <Text style={s.nextTxt}>{isLastStep ? 'DONE' : 'NEXT'}</Text>
+          <Text style={s.nextTxt}>
+            {isLastStep ? '[DONE]' : '[NEXT]'}
+          </Text>
           <PixelIcon
             name={isLastStep ? 'check' : 'chevron-right'}
-            size={14}
-            color="#0B0C10"
+            size={12}
+            color={COLORS.bg}
           />
         </TouchableOpacity>
       </View>
@@ -93,46 +111,31 @@ export function CustomStepNumber() {
 const s = StyleSheet.create({
   tooltipContainer: {
     backgroundColor: COLORS.card,
-    borderRadius: RAD.xs,
+    borderRadius: RAD.md,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: COLORS.border,
     padding: GAP.lg,
-    width: 295,
-    overflow: 'hidden',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  accentBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: COLORS.primary,
+    width: 290,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 2,
     marginBottom: GAP.sm,
   },
-  badge: {
+  stepTag: {
     backgroundColor: COLORS.cardLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: GAP.xs + 2,
+    paddingVertical: 2,
     borderRadius: RAD.xs,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  badgeTxt: {
+  stepTagTxt: {
     fontFamily: FONTS.pixel,
     color: COLORS.primary,
     fontSize: 9,
-    letterSpacing: 1.2,
+    letterSpacing: 0.8,
   },
   skipBtn: {
     paddingVertical: 2,
@@ -147,15 +150,15 @@ const s = StyleSheet.create({
   stepTitle: {
     fontFamily: FONTS.pixel,
     color: COLORS.text,
-    fontSize: TYPE.xs,
+    fontSize: TYPE.xs + 1,
     letterSpacing: 1.2,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   stepDesc: {
     fontFamily: FONTS.regular,
     color: COLORS.textDim,
     fontSize: TYPE.xs,
-    lineHeight: 19,
+    lineHeight: 18,
     marginBottom: GAP.lg,
   },
   navRow: {
@@ -167,13 +170,13 @@ const s = StyleSheet.create({
   prevBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: RAD.xs,
-    backgroundColor: COLORS.cardLight,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: COLORS.border,
-    gap: 3,
+    gap: 4,
   },
   prevTxt: {
     fontFamily: FONTS.pixel,
@@ -184,31 +187,32 @@ const s = StyleSheet.create({
   nextBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: RAD.xs,
     backgroundColor: COLORS.primary,
     gap: 4,
   },
   nextTxt: {
     fontFamily: FONTS.pixel,
-    color: '#0B0C10',
+    color: COLORS.bg,
     fontSize: 10,
     letterSpacing: 1,
+    fontWeight: '600',
   },
   stepNumber: {
-    width: 26,
-    height: 26,
+    width: 24,
+    height: 24,
     borderRadius: RAD.xs,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#0B0C10',
+    borderColor: COLORS.bg,
   },
   stepNumberTxt: {
     fontFamily: FONTS.pixel,
-    color: '#0B0C10',
+    color: COLORS.bg,
     fontSize: 10,
     lineHeight: 12,
   },

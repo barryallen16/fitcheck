@@ -52,12 +52,12 @@ export default function App() {
         <AppProvider>
           <CopilotProvider
             overlay="svg"
-            backdropColor="rgba(11, 12, 16, 0.88)"
+            backdropColor={COLORS.overlay}
             tooltipComponent={CustomTooltip}
             stepNumberComponent={CustomStepNumber}
             animated={true}
-            arrowColor={COLORS.primary}
-            verticalOffset={24}
+            arrowColor={COLORS.card}
+            verticalOffset={18}
           >
             <NavigationContainer theme={navTheme}>
               <StatusBar style="light" />

@@ -43,7 +43,7 @@ export default function StyleScreen({ navigation }) {
           activeOpacity={0.8}
         >
           <View style={s.mainIconBox}>
-            <PixelIcon name="sparkles" size={24} color="#0B0C10" />
+            <PixelIcon name="shirt" size={24} color="#0B0C10" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.mainTxt}>GET OUTFIT RECOMMENDATION</Text>
@@ -67,7 +67,7 @@ export default function StyleScreen({ navigation }) {
           activeOpacity={0.7}
         >
           <View style={s.secIconBox}>
-            <PixelIcon name="sparkles" size={20} color={COLORS.secondary} />
+            <PixelIcon name="sunglasses" size={20} color={COLORS.secondary} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.secTxt}>OUTFIT HISTORY</Text>

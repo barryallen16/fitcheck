@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PixelIcon from '../components/PixelIcon';
+import ConfirmModal from '../components/ConfirmModal';
 import { useApp } from '../context/AppContext';
 import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 
@@ -10,19 +11,10 @@ const W = Dimensions.get('window').width;
 export default function GarmentDetailScreen({ route, navigation }) {
   const { garment } = route.params;
   const { removeGarment } = useApp();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   function handleDel() {
-    Alert.alert('Remove Garment', `Delete "${garment.summary}" from wardrobe?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          removeGarment(garment.id);
-          navigation.goBack();
-        },
-      },
-    ]);
+    setShowConfirm(true);
   }
 
   return (
@@ -82,6 +74,19 @@ export default function GarmentDetailScreen({ route, navigation }) {
           </View>
         </View>
       </ScrollView>
+
+      <ConfirmModal
+        visible={showConfirm}
+        title="REMOVE GARMENT"
+        message={`Remove "${garment.summary}" from your wardrobe?`}
+        confirmText="REMOVE"
+        onConfirm={() => {
+          setShowConfirm(false);
+          removeGarment(garment.id);
+          navigation.goBack();
+        }}
+        onCancel={() => setShowConfirm(false)}
+      />
     </SafeAreaView>
   );
 }

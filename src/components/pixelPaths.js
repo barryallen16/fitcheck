@@ -81,5 +81,13 @@ export const PIXEL_PATHS = {
   ],
   "check-double": [
     "M7 18H5v-2h2v2Zm6 0h-2v-2h2v2Zm-8-2H3v-2h2v2Zm4 0H7v-2h2v2Zm6-2v2h-2v-2h2ZM3 14H1v-2h2v2Zm8 0H9v-2h2v2Zm6 0h-2v-2h2v2Zm-4-2h-2v-2h2v2Zm6 0h-2v-2h2v2Zm-4-2h-2V8h2v2Zm6 0h-2V8h2v2Zm-4-2h-2V6h2v2Zm6 0h-2V6h2v2Z"
+  ],
+  "shirt": [
+    "M4 3h6v2H4zM2 3h2v8H2zm2 6h4v2H4z",
+    "M6 9h2v10H6zm2 10h8v2H8zm8-10h2v10h-2z",
+    "M16 9h4v2h-4zm4-6h2v8h-2zm-6 0h6v2h-6zm-4 2h4v2h-4z"
+  ],
+  "sunglasses": [
+    "M15 10h5v2h-5zM4 10h5v2H4zm16 2h2v5h-2zM9 12h2v5H9zm4 0h2v5h-2zM2 12h2v5H2zm13 5h5v2h-5zM4 17h5v2H4zm7-5h2v2h-2zM2 6h2v6H2zm18 0h2v6h-2zM4 4h2v2H4zm14 0h2v2h-2zM6 12h3v2H6zm11 0h3v2h-3zM4 14h2v3H4zm11 0h2v3h-2zm-9 2h3v1H6zm11 0h3v1h-3zm-9-2h1v2H8zm11 0h1v2h-1z"
   ]
 };

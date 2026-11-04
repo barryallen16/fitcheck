@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import PixelIcon from '../components/PixelIcon';
 import ErrorBanner from '../components/ErrorBanner';
+import ConfirmModal from '../components/ConfirmModal';
 import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 import { getUnusedCombinations, todayStr } from '../utils/helpers';
 
@@ -20,26 +21,51 @@ export default function HomeScreen({ navigation }) {
   const { wardrobe, outfits, serverUrl, serverOk, ping, wearOutfit, unwearOutfit, addOutfit } = useApp();
   const { start, copilotEvents } = useCopilot();
   const scrollRef = useRef(null);
+  const tourStartedRef = useRef(false);
+  const tourTimeoutRef = useRef(null);
+  const startRef = useRef(start);
+  startRef.current = start;
+
   const [banner, setBanner] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [fitIdx, setFitIdx] = useState(0);
+  const [showUnwearConfirm, setShowUnwearConfirm] = useState(false);
 
   useFocusEffect(useCallback(() => { ping(); }, []));
 
+  // One-time auto tour check on initial launch only
   useEffect(() => {
+    let mounted = true;
     async function checkAutoTour() {
       try {
         const seen = await AsyncStorage.getItem('@fitcheck_tour_seen');
-        if (!seen) {
-          setTimeout(() => {
-            start();
+        if (!seen && !tourStartedRef.current && mounted) {
+          tourStartedRef.current = true;
+          tourTimeoutRef.current = setTimeout(() => {
+            if (mounted) {
+              AsyncStorage.setItem('@fitcheck_tour_seen', 'true').catch(() => {});
+              startRef.current?.();
+            }
           }, 800);
         }
       } catch (_) {}
     }
     checkAutoTour();
 
+    return () => {
+      mounted = false;
+      if (tourTimeoutRef.current) {
+        clearTimeout(tourTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Copilot step change scroll sync and stop listeners
+  useEffect(() => {
     const onStop = () => {
+      if (tourTimeoutRef.current) {
+        clearTimeout(tourTimeoutRef.current);
+      }
       AsyncStorage.setItem('@fitcheck_tour_seen', 'true').catch(() => {});
     };
     const onStepChange = (step) => {
@@ -56,7 +82,7 @@ export default function HomeScreen({ navigation }) {
       copilotEvents.off('stop', onStop);
       copilotEvents.off('stepChange', onStepChange);
     };
-  }, [copilotEvents, start]);
+  }, [copilotEvents]);
 
   const cats = new Set(wardrobe.map((g) => g.category)).size;
   const worn = outfits.filter((o) => o.status === 'worn').length;
@@ -188,21 +214,7 @@ export default function HomeScreen({ navigation }) {
 
   function handleUnwearToday() {
     if (!todayWornOutfit) return;
-    Alert.alert(
-      "Change Today's Outfit?",
-      "Unmark this outfit as worn for today so you can choose another look?",
-      [
-        { text: 'Keep Worn', style: 'cancel' },
-        {
-          text: 'Change',
-          style: 'destructive',
-          onPress: () => {
-            unwearOutfit(todayWornOutfit.id);
-            setBanner({ message: 'Outfit unlogged. You can pick another look for today.', type: 'info' });
-          },
-        },
-      ]
-    );
+    setShowUnwearConfirm(true);
   }
 
   async function handleWearCurrent() {
@@ -251,7 +263,12 @@ export default function HomeScreen({ navigation }) {
 
         <TouchableOpacity
           style={s.tourBtn}
-          onPress={() => start()}
+          onPress={() => {
+            if (tourTimeoutRef.current) {
+              clearTimeout(tourTimeoutRef.current);
+            }
+            start();
+          }}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
@@ -276,7 +293,7 @@ export default function HomeScreen({ navigation }) {
         <CopilotStep
           name="brand"
           order={1}
-          text="FitCheck organizes your clothes into tops and bottoms, then scores daily outfit pairs based on temperature and color balance."
+          text="FitCheck organizes your wardrobe and suggests daily outfits matched to the local weather."
         >
           <CopilotView style={s.logoWrap}>
             <Image
@@ -284,7 +301,7 @@ export default function HomeScreen({ navigation }) {
               source={require('../../assets/logo.png')}
               contentFit="contain"
             />
-            <Text style={s.tagline}>AI-Powered Wardrobe & Outfit Engine</Text>
+            <Text style={s.tagline}>Wardrobe stylist & outfit rotation</Text>
           </CopilotView>
         </CopilotStep>
 
@@ -294,8 +311,8 @@ export default function HomeScreen({ navigation }) {
           order={2}
           text={
             todayWornOutfit
-              ? "Your locked-in outfit for today. You can tap Change to swap it or view it in your outfit calendar."
-              : "Check today's suggested look with your top and bottom garments stacked in order. You can log it as worn with one tap."
+              ? "Your logged outfit for today. Tap Change to swap it or view it in your calendar."
+              : "Today's suggested look. Swipe left and right to browse options, then tap Wear Today to log your pick."
           }
         >
           <CopilotView style={s.fitCard}>
@@ -350,7 +367,7 @@ export default function HomeScreen({ navigation }) {
                       <Image source={{ uri: todayBot.imageUri }} style={s.pieceImg} contentFit="cover" />
                     ) : (
                       <View style={[s.pieceImg, s.piecePh]}>
-                        <PixelIcon name="sparkles" size={20} color={COLORS.textMuted} />
+                        <PixelIcon name="shirt" size={20} color={COLORS.textMuted} />
                       </View>
                     )}
                     <View style={s.pieceMeta}>
@@ -403,7 +420,7 @@ export default function HomeScreen({ navigation }) {
               <View>
                 <View style={s.fitHdr}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <PixelIcon name="sparkles" size={14} color={COLORS.primary} />
+                    <PixelIcon name="sunglasses" size={14} color={COLORS.primary} />
                     <Text style={s.fitHdrTitle}>WHAT TO WEAR TODAY</Text>
                   </View>
                   {unwornOutfits.length > 0 ? (
@@ -466,7 +483,7 @@ export default function HomeScreen({ navigation }) {
                           <Image source={{ uri: botGarment.imageUri }} style={s.pieceImg} contentFit="cover" />
                         ) : (
                           <View style={[s.pieceImg, s.piecePh]}>
-                            <PixelIcon name="sparkles" size={20} color={COLORS.textMuted} />
+                            <PixelIcon name="shirt" size={20} color={COLORS.textMuted} />
                           </View>
                         )}
                         <View style={s.pieceMeta}>
@@ -567,7 +584,7 @@ export default function HomeScreen({ navigation }) {
         <CopilotStep
           name="stylist"
           order={3}
-          text="Generates a recommended look for today. You can anchor a specific shirt or pants first, or let the model pick an unworn combination."
+          text="Generate a fresh look. Anchor a specific piece first, or let the stylist pick an unworn combination."
         >
           <CopilotView>
             <TouchableOpacity
@@ -576,7 +593,7 @@ export default function HomeScreen({ navigation }) {
               activeOpacity={0.8}
             >
               <View style={s.ctaIconBox}>
-                <PixelIcon name="sparkles" size={24} color="#0B0C10" />
+                <PixelIcon name="shirt" size={24} color="#0B0C10" />
               </View>
               <View style={{ flex: 1, marginLeft: GAP.md }}>
                 <Text style={s.ctaTitle}>GENERATE TODAY'S FIT</Text>
@@ -591,7 +608,7 @@ export default function HomeScreen({ navigation }) {
         <CopilotStep
           name="metrics"
           order={4}
-          text="Shows your total garment inventory and worn rotation history so you can see which pieces rarely get used."
+          text="Check your garment count, categories, and rotation history to see which pieces get worn most."
         >
           <CopilotView style={s.metricsCard}>
             <TouchableOpacity
@@ -632,6 +649,23 @@ export default function HomeScreen({ navigation }) {
           </CopilotView>
         </CopilotStep>
       </ScrollView>
+
+      <ConfirmModal
+        visible={showUnwearConfirm}
+        title="CHANGE TODAY'S OUTFIT"
+        message="Unmark this outfit as worn for today so you can choose another look?"
+        confirmText="CHANGE"
+        cancelText="KEEP"
+        isDestructive={false}
+        onConfirm={() => {
+          setShowUnwearConfirm(false);
+          if (todayWornOutfit) {
+            unwearOutfit(todayWornOutfit.id);
+            setBanner({ message: 'Outfit unlogged. You can pick another look for today.', type: 'info' });
+          }
+        }}
+        onCancel={() => setShowUnwearConfirm(false)}
+      />
     </SafeAreaView>
   );
 }

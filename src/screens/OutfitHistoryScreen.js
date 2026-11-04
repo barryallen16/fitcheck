@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PixelIcon from '../components/PixelIcon';
+import ConfirmModal from '../components/ConfirmModal';
 import { useApp } from '../context/AppContext';
 import OutfitCard from '../components/OutfitCard';
 import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
@@ -10,6 +11,7 @@ import { todayStr } from '../utils/helpers';
 export default function OutfitHistoryScreen({ navigation }) {
   const { outfits, wardrobe, wearOutfit, unwearOutfit, deleteOutfit } = useApp();
   const [tab, setTab] = useState('unworn');
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const unworn = outfits.filter((o) => o.status === 'unworn').reverse();
   const worn = outfits.filter((o) => o.status === 'worn').sort((a, b) => (b.wornDate || '').localeCompare(a.wornDate || ''));
@@ -63,16 +65,13 @@ export default function OutfitHistoryScreen({ navigation }) {
             onPress={() => navigation.navigate('OutfitDetail', { outfitId: item.id })}
             onWear={(id) => wearOutfit(id, todayStr())}
             onUnwear={unwearOutfit}
-            onDelete={(id) => Alert.alert('Delete?', 'Remove this outfit?', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Delete', style: 'destructive', onPress: () => deleteOutfit(id) },
-            ])}
+            onDelete={(id) => setPendingDeleteId(id)}
           />
         )}
         ListEmptyComponent={
           <View style={s.empty}>
             <View style={s.emptyIconCircle}>
-              <PixelIcon name={tab === 'unworn' ? 'sparkles' : 'briefcase'} size={32} color={COLORS.textMuted} />
+              <PixelIcon name={tab === 'unworn' ? 'shirt' : 'briefcase'} size={32} color={COLORS.textMuted} />
             </View>
             <Text style={s.emptyTitle}>{tab === 'unworn' ? 'NO UNWORN OUTFITS' : 'NO WORN OUTFITS'}</Text>
             <Text style={s.emptySub}>
@@ -82,6 +81,18 @@ export default function OutfitHistoryScreen({ navigation }) {
             </Text>
           </View>
         }
+      />
+
+      <ConfirmModal
+        visible={!!pendingDeleteId}
+        title="DELETE OUTFIT"
+        message="Remove this look from your archive?"
+        confirmText="DELETE"
+        onConfirm={() => {
+          if (pendingDeleteId) deleteOutfit(pendingDeleteId);
+          setPendingDeleteId(null);
+        }}
+        onCancel={() => setPendingDeleteId(null)}
       />
     </SafeAreaView>
   );
