@@ -1,3 +1,13 @@
+# Git repository
+.git
+.git/**
+**/.git
+
+# Media & documentation
+*.mp4
+fitcheck-demo.mp4
+assets/preview.jpg
+
 # Dependencies
 node_modules/
 

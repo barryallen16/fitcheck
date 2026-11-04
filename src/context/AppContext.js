@@ -24,20 +24,22 @@ export function AppProvider({ children }) {
   const [serverOk, setServerOk] = useState(false);
   const [modelName, setModelName] = useState(null);
   const [booting, setBooting] = useState(true);
+  const [onboardingDone, setOnboardingDone] = useState(true);
 
   const active = personas.find((p) => p.id === activeId) || personas[0] || null;
 
   useEffect(() => { boot(); }, []);
 
   async function boot() {
-    const [saved, actId, url] = await Promise.all([
-      storage.loadPersonas(), storage.loadActive(), storage.loadServer(),
+    const [saved, actId, url, onb] = await Promise.all([
+      storage.loadPersonas(), storage.loadActive(), storage.loadServer(), storage.loadOnboarding(),
     ]);
     let ps = saved;
     if (!ps.length) ps = [newPersona()];
     setPersonas(ps);
     setActiveId(actId && ps.find((p) => p.id === actId) ? actId : ps[0].id);
     if (url) { _setUrl(url); lm.setUrl(url); }
+    setOnboardingDone(Boolean(onb));
     const c = await lm.checkConnection();
     setServerOk(c.ok); if (c.ok) setModelName(c.model);
     setBooting(false);
@@ -69,6 +71,15 @@ export function AppProvider({ children }) {
     _update((p) => ({ ...p, gender }));
   }, [activeId]);
 
+  const completeOnboarding = useCallback(async ({ gender } = {}) => {
+    if (gender) {
+      _update((p) => ({ ...p, gender }));
+    }
+    await storage.saveOnboarding(true);
+    await storage.saveTermsAccepted(new Date().toISOString());
+    setOnboardingDone(true);
+  }, [activeId]);
+
   const addGarment = useCallback(async (data) => {
     const imageUri = await persistImage(data.imageUri);
     const g = { id: uid(), ...data, imageUri, addedAt: new Date().toISOString() };
@@ -90,6 +101,18 @@ export function AppProvider({ children }) {
       return { ...p, wardrobe: [] };
     });
   }, [activeId]);
+
+  const resetAllData = useCallback(async () => {
+    // Purge images from filesystem
+    personas.forEach((p) => {
+      (p.wardrobe || []).forEach((g) => deleteImage(g.imageUri));
+    });
+    await storage.resetAll();
+    const fresh = [newPersona()];
+    setPersonas(fresh);
+    setActiveId(fresh[0].id);
+    setOnboardingDone(false);
+  }, [personas]);
 
   const addOutfit = useCallback((data) => {
     const o = {
@@ -155,6 +178,7 @@ export function AppProvider({ children }) {
     <Ctx.Provider value={{
       personas, active, activeId,
       serverUrl, serverOk, modelName, booting, setServerUrl, ping,
+      onboardingDone, completeOnboarding, resetAllData,
       wardrobe, outfits, gender,
       setGender, addGarment, removeGarment, clearWardrobe,
       addOutfit, wearOutfit, unwearOutfit, deleteOutfit,

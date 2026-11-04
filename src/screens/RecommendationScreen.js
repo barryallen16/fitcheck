@@ -129,7 +129,7 @@ export default function RecommendationScreen({ navigation }) {
             </View>
 
             <Animated.View style={[s.loadLogoBox, { transform: [{ scale: pulseAnim }], opacity: glowAnim }]}>
-              <FitCheckLogo width={145} height={60} />
+              <FitCheckLogo width={180} height={75} />
             </Animated.View>
 
             <Text style={s.loadMsg}>{LOAD_MSGS[loadIdx].msg.toUpperCase()}</Text>

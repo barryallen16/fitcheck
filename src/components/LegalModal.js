@@ -71,7 +71,7 @@ export default function LegalModal({ visible, initialTab = 'privacy', onClose })
           ))}
 
           <View style={s.footer}>
-            <Text style={s.footerTxt}>FitCheck AI Wardrobe Engine · Version 2.0.0</Text>
+            <Text style={s.footerTxt}>FitCheck AI Wardrobe Engine · Version 2.1.0</Text>
           </View>
         </ScrollView>
       </SafeAreaView>

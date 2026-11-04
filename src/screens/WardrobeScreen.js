@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ScrollView, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '../context/AppContext';
@@ -19,7 +19,7 @@ const FILTERS = [
 ];
 
 export default function WardrobeScreen({ navigation }) {
-  const { wardrobe, removeGarment, clearWardrobe, serverOk } = useApp();
+  const { wardrobe, removeGarment, clearWardrobe, serverOk, ping } = useApp();
   const [banner, setBanner] = useState(null);
   const [filter, setFilter] = useState('ALL');
   const [confirmModal, setConfirmModal] = useState(null);
@@ -41,9 +41,21 @@ export default function WardrobeScreen({ navigation }) {
   }, [wardrobe, filter]);
 
   async function pick() {
-    if (!serverOk) { setBanner({ message: 'Connect to AI endpoint first', type: 'error' }); return; }
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') { setBanner({ message: 'Permission required', type: 'error' }); return; }
+    if (!serverOk) {
+      void ping();
+    }
+    const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      if (!canAskAgain) {
+        Alert.alert('Photo Access Required', 'Please enable photo library access in Settings to catalog your clothes.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+        ]);
+      } else {
+        setBanner({ message: 'Photo library permission is required to choose garments', type: 'warning' });
+      }
+      return;
+    }
     const r = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'], allowsMultipleSelection: true, quality: 0.6, selectionLimit: 0,
     });
@@ -51,9 +63,21 @@ export default function WardrobeScreen({ navigation }) {
   }
 
   async function camera() {
-    if (!serverOk) { setBanner({ message: 'Connect to AI endpoint first', type: 'error' }); return; }
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') { setBanner({ message: 'Permission required', type: 'error' }); return; }
+    if (!serverOk) {
+      void ping();
+    }
+    const { status, canAskAgain } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      if (!canAskAgain) {
+        Alert.alert('Camera Access Required', 'Please enable camera permissions in Settings to photograph your clothes.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+        ]);
+      } else {
+        setBanner({ message: 'Camera permission is required to photograph garments', type: 'warning' });
+      }
+      return;
+    }
     const r = await ImagePicker.launchCameraAsync({ quality: 0.6 });
     if (!r.canceled && r.assets?.length) navigation.navigate('Analyzing', { images: r.assets });
   }

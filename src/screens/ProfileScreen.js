@@ -14,7 +14,7 @@ export default function ProfileScreen({ navigation }) {
   const {
     gender, setGender, outfits, wardrobe, clearWardrobe,
     serverUrl, serverOk, modelName, setServerUrl, ping,
-    personas, activeId, restoreFromBackup,
+    personas, activeId, restoreFromBackup, resetAllData,
   } = useApp();
   const { start } = useCopilot();
   const [banner, setBanner] = useState(null);
@@ -24,6 +24,7 @@ export default function ProfileScreen({ navigation }) {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   async function handleExportBackup() {
     try {
@@ -310,9 +311,18 @@ export default function ProfileScreen({ navigation }) {
           <Text style={s.dangerTxt}>Clear Wardrobe Items</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[s.dangerBtn, { marginTop: GAP.sm }]}
+          onPress={() => setShowResetConfirm(true)}
+          activeOpacity={0.7}
+        >
+          <PixelIcon name="refresh" size={18} color={COLORS.red} />
+          <Text style={s.dangerTxt}>Reset App & Erase All Data</Text>
+        </TouchableOpacity>
+
         {/* App Version Tag */}
         <View style={s.verBox}>
-          <Text style={s.verTxt}>FitCheck v2.0.1 · Qwen3-VL 2B Stylist</Text>
+          <Text style={s.verTxt}>FitCheck v2.1.0 · Qwen3-VL 2B Stylist</Text>
         </View>
       </ScrollView>
 
@@ -320,6 +330,18 @@ export default function ProfileScreen({ navigation }) {
         visible={Boolean(legalTab)}
         initialTab={legalTab || 'privacy'}
         onClose={() => setLegalTab(null)}
+      />
+
+      <ConfirmModal
+        visible={showResetConfirm}
+        title="RESET ALL DATA"
+        message="Permanently delete all wardrobe items, photos, outfits, and reset the app to the initial onboarding state? This cannot be undone."
+        confirmText="RESET EVERYTHING"
+        onConfirm={async () => {
+          setShowResetConfirm(false);
+          await resetAllData();
+        }}
+        onCancel={() => setShowResetConfirm(false)}
       />
 
       <ConfirmModal

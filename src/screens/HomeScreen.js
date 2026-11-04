@@ -18,7 +18,7 @@ const NativeWalkableView = React.forwardRef((props, ref) => (
 const CopilotView = walkthroughable(NativeWalkableView);
 
 export default function HomeScreen({ navigation }) {
-  const { wardrobe, outfits, serverUrl, serverOk, ping, wearOutfit, unwearOutfit, addOutfit } = useApp();
+  const { wardrobe, outfits, serverUrl, serverOk, ping, wearOutfit, unwearOutfit, addOutfit, onboardingDone } = useApp();
   const { start, copilotEvents } = useCopilot();
   const scrollRef = useRef(null);
   const tourStartedRef = useRef(false);
@@ -37,6 +37,7 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     let mounted = true;
     async function checkAutoTour() {
+      if (!onboardingDone) return;
       try {
         const seen = await AsyncStorage.getItem('@fitcheck_tour_seen');
         if (!seen && !tourStartedRef.current && mounted) {
@@ -58,7 +59,7 @@ export default function HomeScreen({ navigation }) {
         clearTimeout(tourTimeoutRef.current);
       }
     };
-  }, []);
+  }, [onboardingDone]);
 
   // Copilot step change scroll sync and stop listeners
   useEffect(() => {

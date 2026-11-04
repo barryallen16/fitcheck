@@ -1,7 +1,7 @@
 import React from 'react';
 import Svg, { Image as SvgImage } from 'react-native-svg';
 
-export default function FitCheckLogo({ width = 145, height = 60, style }) {
+export default function FitCheckLogo({ width = 200, height = 84, style }) {
   return (
     <Svg width={width} height={height} viewBox="0 0 303 127" style={style}>
       <SvgImage
