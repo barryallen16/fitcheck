@@ -79,8 +79,3 @@ export const RAD = {
   xl: 12,
   full: 999,
 };
-
-export const PERSONA_COLORS = [
-  '#D83995', '#0593C6', '#34D399', '#FB923C',
-  '#A855F7', '#60A5FA', '#F43F5E', '#FBBF24',
-];

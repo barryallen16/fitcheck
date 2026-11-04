@@ -30,14 +30,21 @@ export default function RecommendationScreen({ navigation }) {
   const intervalRef = useRef(null);
   const timerRef = useRef(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0.88)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (loading) {
       const pulseLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.08, duration: 800, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 0.94, duration: 800, useNativeDriver: true }),
+        Animated.parallel([
+          Animated.sequence([
+            Animated.timing(pulseAnim, { toValue: 1.05, duration: 900, useNativeDriver: true }),
+            Animated.timing(pulseAnim, { toValue: 0.96, duration: 900, useNativeDriver: true }),
+          ]),
+          Animated.sequence([
+            Animated.timing(glowAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
+            Animated.timing(glowAnim, { toValue: 0.85, duration: 900, useNativeDriver: true }),
+          ]),
         ])
       );
       pulseLoop.start();
@@ -125,12 +132,20 @@ export default function RecommendationScreen({ navigation }) {
               <Text style={s.loadBadgeTxt}>TASK B STYLIST · {String(elapsed).padStart(2, '0')}S</Text>
             </View>
 
-            <Animated.View style={[s.loadIconBox, { transform: [{ scale: pulseAnim }] }]}>
-              <PixelIcon name="sparkles" size={26} color={COLORS.primary} />
+            <Animated.View style={[s.loadLogoBox, { transform: [{ scale: pulseAnim }], opacity: glowAnim }]}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={s.loadLogo}
+                resizeMode="contain"
+              />
             </Animated.View>
 
             <Text style={s.loadMsg}>{LOAD_MSGS[loadIdx].msg.toUpperCase()}</Text>
-            <Text style={s.loadSub}>{LOAD_MSGS[loadIdx].sub}</Text>
+            <Text style={s.loadSub}>
+              {elapsed >= 12
+                ? 'Waking up cloud server (cold start takes ~25-35s)...'
+                : LOAD_MSGS[loadIdx].sub}
+            </Text>
 
             <View style={s.loadBarWrap}>
               <Animated.View
@@ -328,16 +343,16 @@ const s = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 1,
   },
-  loadIconBox: {
-    width: 54,
-    height: 54,
-    borderRadius: RAD.sm,
-    backgroundColor: COLORS.cardLight,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
+  loadLogoBox: {
+    width: 150,
+    height: 64,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: GAP.md,
+    marginBottom: GAP.sm,
+  },
+  loadLogo: {
+    width: 145,
+    height: 60,
   },
   loadMsg: {
     fontFamily: FONTS.pixel,

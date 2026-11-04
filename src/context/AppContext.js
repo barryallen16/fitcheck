@@ -3,16 +3,13 @@ import storage from '../services/storageService';
 import lm from '../services/lmStudioService';
 import { uid, todayStr, getMaxOutfits, getUnusedCombinations } from '../utils/helpers';
 import { persistImage, deleteImage } from '../services/imageStorage';
-import { PERSONA_COLORS } from '../constants/theme';
 
 const Ctx = createContext();
 
-function newPersona(name, index) {
+function newPersona(name = 'Default') {
   return {
     id: uid(),
     name,
-    color: PERSONA_COLORS[index % PERSONA_COLORS.length],
-    fullBodyPhoto: null,
     gender: null,
     wardrobe: [],
     outfits: [],
@@ -37,7 +34,7 @@ export function AppProvider({ children }) {
       storage.loadPersonas(), storage.loadActive(), storage.loadServer(),
     ]);
     let ps = saved;
-    if (!ps.length) ps = [newPersona('Default', 0)];
+    if (!ps.length) ps = [newPersona()];
     setPersonas(ps);
     setActiveId(actId && ps.find((p) => p.id === actId) ? actId : ps[0].id);
     if (url) { _setUrl(url); lm.setUrl(url); }
@@ -67,42 +64,6 @@ export function AppProvider({ children }) {
     setServerOk(c.ok); if (c.ok) setModelName(c.model);
     return c;
   }, []);
-
-  const switchPersona = useCallback((id) => {
-    setActiveId(id); storage.saveActive(id);
-  }, []);
-
-  const addPersona = useCallback((name) => {
-    setPersonas((prev) => {
-      const p = newPersona(name, prev.length);
-      const next = [...prev, p];
-      storage.savePersonas(next);
-      setActiveId(p.id); storage.saveActive(p.id);
-      return next;
-    });
-  }, []);
-
-  const renamePersona = useCallback((id, name) => {
-    setPersonas((prev) => {
-      const next = prev.map((p) => p.id === id ? { ...p, name } : p);
-      storage.savePersonas(next); return next;
-    });
-  }, []);
-
-  const deletePersona = useCallback((id) => {
-    setPersonas((prev) => {
-      if (prev.length <= 1) return prev;
-      const next = prev.filter((p) => p.id !== id);
-      storage.savePersonas(next);
-      if (activeId === id) { setActiveId(next[0].id); storage.saveActive(next[0].id); }
-      return next;
-    });
-  }, [activeId]);
-
-  const setFullBodyPhoto = useCallback(async (uri) => {
-    const persisted = uri ? await persistImage(uri) : null;
-    _update((p) => ({ ...p, fullBodyPhoto: persisted }));
-  }, [activeId]);
 
   const setGender = useCallback((gender) => {
     _update((p) => ({ ...p, gender }));
@@ -161,7 +122,6 @@ export function AppProvider({ children }) {
 
   const wardrobe = active?.wardrobe || [];
   const outfits = active?.outfits || [];
-  const fullBodyPhoto = active?.fullBodyPhoto || null;
   const gender = active?.gender || null;
 
   const isExhausted = useCallback(() => {
@@ -172,14 +132,33 @@ export function AppProvider({ children }) {
     return outfits.filter((o) => o.status === 'worn' && o.wornDate === dateStr);
   }, [outfits]);
 
+  const restoreFromBackup = useCallback(async (data) => {
+    if (data?.personas?.length) {
+      setPersonas(data.personas);
+      await storage.savePersonas(data.personas);
+    }
+    if (data?.activeId) {
+      setActiveId(data.activeId);
+      await storage.saveActive(data.activeId);
+    }
+    if (data?.serverUrl) {
+      _setUrl(data.serverUrl);
+      lm.setUrl(data.serverUrl);
+      await storage.saveServer(data.serverUrl);
+      const c = await lm.checkConnection();
+      setServerOk(c.ok);
+      setModelName(c.ok ? c.model : null);
+    }
+  }, []);
+
   return (
     <Ctx.Provider value={{
-      personas, active, activeId, switchPersona, addPersona, renamePersona, deletePersona,
+      personas, active, activeId,
       serverUrl, serverOk, modelName, booting, setServerUrl, ping,
-      wardrobe, outfits, fullBodyPhoto, gender,
-      setFullBodyPhoto, setGender, addGarment, removeGarment, clearWardrobe,
+      wardrobe, outfits, gender,
+      setGender, addGarment, removeGarment, clearWardrobe,
       addOutfit, wearOutfit, unwearOutfit, deleteOutfit,
-      isExhausted, outfitsForDate,
+      isExhausted, outfitsForDate, restoreFromBackup,
     }}>
       {children}
     </Ctx.Provider>

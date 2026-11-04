@@ -1,14 +1,77 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCopilot } from 'react-native-copilot';
 import { useApp } from '../context/AppContext';
 import PixelIcon from '../components/PixelIcon';
 import ErrorBanner from '../components/ErrorBanner';
+import LegalModal from '../components/LegalModal';
+import { exportBackupData, importBackupData } from '../services/backupService';
 import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
 
 export default function ProfileScreen({ navigation }) {
-  const { gender, setGender, outfits, wardrobe, clearWardrobe } = useApp();
+  const {
+    gender, setGender, outfits, wardrobe, clearWardrobe,
+    serverUrl, serverOk, modelName, setServerUrl, ping,
+    personas, activeId, restoreFromBackup,
+  } = useApp();
+  const { start } = useCopilot();
   const [banner, setBanner] = useState(null);
+  const [legalTab, setLegalTab] = useState(null);
+  const [urlDraft, setUrlDraft] = useState(serverUrl);
+  const [connecting, setConnecting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+
+  async function handleExportBackup() {
+    try {
+      setExporting(true);
+      const res = await exportBackupData({ personas, activeId, serverUrl });
+      setBanner({
+        message: `Archive created: ${res.garmentCount} items, ${res.imageCount} photos.`,
+        type: 'success',
+      });
+    } catch (err) {
+      setBanner({ message: `Export failed: ${err.message}`, type: 'error' });
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleImportBackup() {
+    try {
+      setImporting(true);
+      const res = await importBackupData();
+      if (res.canceled) return;
+      if (res.ok) {
+        await restoreFromBackup(res.data);
+        setBanner({
+          message: `Restored ${res.personaCount} profile(s), ${res.garmentCount} items, and ${res.imageCount} photos.`,
+          type: 'success',
+        });
+      }
+    } catch (err) {
+      setBanner({ message: `Import failed: ${err.message}`, type: 'error' });
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  async function handleConnectUrl(target) {
+    const u = (target || urlDraft || '').trim();
+    if (!u) {
+      setBanner({ message: 'Enter a valid URL', type: 'error' });
+      return;
+    }
+    setConnecting(true);
+    const r = await setServerUrl(u);
+    setConnecting(false);
+    if (r.ok) {
+      setBanner({ message: `Connected: ${r.model || 'model ready'}`, type: 'success' });
+    } else {
+      setBanner({ message: `Failed: ${r.error}`, type: 'error' });
+    }
+  }
 
   const wornCount = (outfits || []).filter((o) => o.status === 'worn').length;
   const garmentCount = (wardrobe || []).length;
@@ -20,18 +83,8 @@ export default function ProfileScreen({ navigation }) {
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={s.hdrRow}>
-          <Text style={s.title}>PROFILE</Text>
-        </View>
-
-        {/* User Card */}
-        <View style={s.userCard}>
-          <View style={s.avatarWrap}>
-            <PixelIcon name="user" size={32} color={COLORS.primary} />
-          </View>
-          <View style={{ flex: 1, marginLeft: GAP.md }}>
-            <Text style={s.userName}>Personal Closet</Text>
-            <Text style={s.userSub}>AI Stylist Profile</Text>
-          </View>
+          <Text style={s.title}>SETTINGS</Text>
+          <Text style={s.hdrSub}>Closet configuration & preferences</Text>
         </View>
 
         {/* Stats */}
@@ -92,6 +145,157 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
+        {/* Server & AI Endpoint Configuration */}
+        <Text style={[s.secLabel, { marginTop: GAP.xl }]}>AI INFERENCE BACKEND</Text>
+        <View style={s.serverCard}>
+          <View style={s.serverHdr}>
+            <View style={[s.statusDot, { backgroundColor: serverOk ? COLORS.green : COLORS.red }]} />
+            <View style={{ flex: 1, marginLeft: GAP.sm }}>
+              <Text style={s.serverStatusTxt}>
+                {serverOk
+                  ? (serverUrl?.includes('hf.space') ? 'FITCHECK CLOUD' : 'LOCAL LM STUDIO')
+                  : 'DISCONNECTED'}
+              </Text>
+              <Text style={s.serverModelTxt} numberOfLines={1}>
+                {serverOk ? (modelName || 'Qwen3-VL 2B Active') : 'No endpoint reachable'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={s.urlRow}>
+            <TextInput
+              style={s.urlInput}
+              value={urlDraft}
+              onChangeText={setUrlDraft}
+              placeholder="https://barryallen16-fitcheck.hf.space"
+              placeholderTextColor={COLORS.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+            <TouchableOpacity
+              style={[s.saveBtn, connecting && { opacity: 0.5 }]}
+              onPress={() => handleConnectUrl(urlDraft)}
+              disabled={connecting}
+              activeOpacity={0.7}
+            >
+              <Text style={s.saveBtnTxt}>{connecting ? '...' : 'SAVE'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={s.resetBtn}
+            onPress={() => {
+              const cloud = 'https://barryallen16-fitcheck.hf.space';
+              setUrlDraft(cloud);
+              handleConnectUrl(cloud);
+            }}
+            activeOpacity={0.7}
+          >
+            <PixelIcon name="refresh" size={12} color={COLORS.secondary} />
+            <Text style={s.resetBtnTxt}>Reset to Official Cloud Endpoint</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Help & App Tour */}
+        <Text style={[s.secLabel, { marginTop: GAP.xl }]}>GUIDE & HELP</Text>
+        <TouchableOpacity
+          style={s.menuBtn}
+          onPress={() => {
+            navigation.navigate('Home');
+            setTimeout(() => {
+              void start();
+            }, 350);
+          }}
+          activeOpacity={0.7}
+        >
+          <View style={s.menuIconBox}>
+            <PixelIcon name="zap" size={16} color={COLORS.primary} />
+          </View>
+          <View style={{ flex: 1, marginLeft: GAP.md }}>
+            <Text style={s.menuTitle}>App Tour & Walkthrough</Text>
+            <Text style={s.menuSub}>Step-by-step interactive interface tour</Text>
+          </View>
+          <PixelIcon name="chevron-right" size={16} color={COLORS.textDim} />
+        </TouchableOpacity>
+
+        {/* Data & Backup */}
+        <Text style={[s.secLabel, { marginTop: GAP.xl }]}>DATA & BACKUP</Text>
+        <Text style={s.secHint}>Export a complete archive with all clothes, photos, and outfits, or restore a previous backup.</Text>
+        <View style={s.cardGroup}>
+          <TouchableOpacity
+            style={s.docRow}
+            onPress={handleExportBackup}
+            disabled={exporting || importing}
+            activeOpacity={0.7}
+          >
+            <PixelIcon name="zap" size={18} color={COLORS.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={s.docTxt}>Export Data Archive</Text>
+              <Text style={s.backupSubTxt}>
+                {exporting ? 'Packaging clothes and photos...' : 'Includes all images, settings, and wear logs'}
+              </Text>
+            </View>
+            <PixelIcon name="chevron-right" size={16} color={COLORS.textDim} />
+          </TouchableOpacity>
+
+          <View style={s.docDivider} />
+
+          <TouchableOpacity
+            style={s.docRow}
+            onPress={handleImportBackup}
+            disabled={exporting || importing}
+            activeOpacity={0.7}
+          >
+            <PixelIcon name="refresh" size={18} color={COLORS.secondary} />
+            <View style={{ flex: 1 }}>
+              <Text style={s.docTxt}>Import & Restore Backup</Text>
+              <Text style={s.backupSubTxt}>
+                {importing ? 'Restoring files...' : 'Select a JSON backup file from your device'}
+              </Text>
+            </View>
+            <PixelIcon name="chevron-right" size={16} color={COLORS.textDim} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Legal & Compliance */}
+        <Text style={[s.secLabel, { marginTop: GAP.xl }]}>LEGAL & COMPLIANCE</Text>
+        <View style={s.cardGroup}>
+          <TouchableOpacity
+            style={s.docRow}
+            onPress={() => setLegalTab('privacy')}
+            activeOpacity={0.7}
+          >
+            <PixelIcon name="shield" size={18} color={COLORS.primary} />
+            <Text style={s.docTxt}>Privacy Policy</Text>
+            <PixelIcon name="chevron-right" size={16} color={COLORS.textDim} />
+          </TouchableOpacity>
+
+          <View style={s.docDivider} />
+
+          <TouchableOpacity
+            style={s.docRow}
+            onPress={() => setLegalTab('terms')}
+            activeOpacity={0.7}
+          >
+            <PixelIcon name="briefcase" size={18} color={COLORS.secondary} />
+            <Text style={s.docTxt}>Terms of Service</Text>
+            <PixelIcon name="chevron-right" size={16} color={COLORS.textDim} />
+          </TouchableOpacity>
+
+          <View style={s.docDivider} />
+
+          <TouchableOpacity
+            style={s.docRow}
+            onPress={() => setLegalTab('compliance')}
+            activeOpacity={0.7}
+          >
+            <PixelIcon name="sparkles" size={18} color={COLORS.primary} />
+            <Text style={s.docTxt}>AI Transparency & Disclosure</Text>
+            <PixelIcon name="chevron-right" size={16} color={COLORS.textDim} />
+          </TouchableOpacity>
+        </View>
+
         {/* Actions / Data Management */}
         <Text style={[s.secLabel, { marginTop: GAP.xl }]}>DATA MANAGEMENT</Text>
 
@@ -109,9 +313,15 @@ export default function ProfileScreen({ navigation }) {
 
         {/* App Version Tag */}
         <View style={s.verBox}>
-          <Text style={s.verTxt}>FitCheck v1.0.0 · Qwen3-VL 2B Stylist</Text>
+          <Text style={s.verTxt}>FitCheck v2.0.0 · Qwen3-VL 2B Stylist</Text>
         </View>
       </ScrollView>
+
+      <LegalModal
+        visible={Boolean(legalTab)}
+        initialTab={legalTab || 'privacy'}
+        onClose={() => setLegalTab(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -127,36 +337,10 @@ const s = StyleSheet.create({
     fontSize: TYPE.xl,
     letterSpacing: 1.5,
   },
-
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.card,
-    borderRadius: RAD.md,
-    padding: GAP.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: GAP.lg,
-  },
-  avatarWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: RAD.sm,
-    backgroundColor: COLORS.cardLight,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userName: {
-    fontFamily: FONTS.bold,
-    fontSize: TYPE.base,
-    color: COLORS.text,
-  },
-  userSub: {
+  hdrSub: {
     fontFamily: FONTS.regular,
-    fontSize: TYPE.xs,
     color: COLORS.textDim,
+    fontSize: TYPE.xs,
     marginTop: 2,
   },
 
@@ -234,6 +418,145 @@ const s = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
+  },
+
+  serverCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: GAP.md,
+    marginBottom: GAP.sm,
+  },
+  serverHdr: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: GAP.md,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  serverStatusTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.text,
+    fontSize: TYPE.xs,
+    letterSpacing: 1,
+  },
+  serverModelTxt: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: 10,
+    marginTop: 1,
+  },
+  urlRow: {
+    flexDirection: 'row',
+    gap: GAP.sm,
+    marginBottom: GAP.sm,
+  },
+  urlInput: {
+    flex: 1,
+    backgroundColor: COLORS.cardLight,
+    borderRadius: RAD.xs,
+    paddingHorizontal: GAP.sm,
+    paddingVertical: 8,
+    color: COLORS.text,
+    fontFamily: FONTS.regular,
+    fontSize: TYPE.xs,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  saveBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: RAD.xs,
+    paddingHorizontal: GAP.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  saveBtnTxt: {
+    fontFamily: FONTS.pixel,
+    color: '#0B0C10',
+    fontSize: 10,
+    letterSpacing: 0.8,
+  },
+  resetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 2,
+  },
+  resetBtnTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.secondary,
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
+
+  menuBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    padding: GAP.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: GAP.sm,
+  },
+  menuIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: RAD.xs,
+    backgroundColor: COLORS.cardLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  menuTitle: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.text,
+    fontSize: TYPE.xs,
+    letterSpacing: 0.8,
+  },
+  menuSub: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: 10,
+    marginTop: 2,
+  },
+
+  cardGroup: {
+    backgroundColor: COLORS.card,
+    borderRadius: RAD.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: 'hidden',
+    marginBottom: GAP.sm,
+  },
+  docRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: GAP.md,
+    paddingHorizontal: GAP.md,
+    gap: GAP.md,
+  },
+  docDivider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginHorizontal: GAP.md,
+  },
+  docTxt: {
+    flex: 1,
+    fontFamily: FONTS.regular,
+    color: COLORS.text,
+    fontSize: TYPE.sm,
+  },
+  backupSubTxt: {
+    fontFamily: FONTS.regular,
+    color: COLORS.textDim,
+    fontSize: 11,
+    marginTop: 2,
   },
 
   dangerBtn: {

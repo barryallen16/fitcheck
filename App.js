@@ -6,6 +6,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFonts } from 'expo-font';
 import { AppProvider } from './src/context/AppContext';
+import { CopilotProvider } from 'react-native-copilot';
+import { CustomTooltip, CustomStepNumber } from './src/components/CopilotCustom';
 import TabNavigator from './src/navigation/TabNavigator';
 import { COLORS } from './src/constants/theme';
 
@@ -48,10 +50,20 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AppProvider>
-          <NavigationContainer theme={navTheme}>
-            <StatusBar style="light" />
-            <TabNavigator />
-          </NavigationContainer>
+          <CopilotProvider
+            overlay="svg"
+            backdropColor="rgba(11, 12, 16, 0.88)"
+            tooltipComponent={CustomTooltip}
+            stepNumberComponent={CustomStepNumber}
+            animated={true}
+            arrowColor={COLORS.primary}
+            verticalOffset={24}
+          >
+            <NavigationContainer theme={navTheme}>
+              <StatusBar style="light" />
+              <TabNavigator />
+            </NavigationContainer>
+          </CopilotProvider>
         </AppProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

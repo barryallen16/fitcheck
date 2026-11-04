@@ -1,16 +1,42 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '../context/AppContext';
 import GarmentCard from '../components/GarmentCard';
 import PixelIcon from '../components/PixelIcon';
 import ErrorBanner from '../components/ErrorBanner';
+import { isTop, isBottom, isFullBody } from '../utils/helpers';
 import { COLORS, TYPE, GAP, RAD, FONTS } from '../constants/theme';
+
+const FILTERS = [
+  { key: 'ALL', label: 'ALL' },
+  { key: 'TOPS', label: 'TOPS' },
+  { key: 'BOTTOMS', label: 'BOTTOMS' },
+  { key: 'FULL', label: 'DRESSES' },
+  { key: 'OTHER', label: 'OTHER' },
+];
 
 export default function WardrobeScreen({ navigation }) {
   const { wardrobe, removeGarment, clearWardrobe, serverOk } = useApp();
   const [banner, setBanner] = useState(null);
+  const [filter, setFilter] = useState('ALL');
+
+  const counts = useMemo(() => ({
+    ALL: wardrobe.length,
+    TOPS: wardrobe.filter((g) => isTop(g.category)).length,
+    BOTTOMS: wardrobe.filter((g) => isBottom(g.category)).length,
+    FULL: wardrobe.filter((g) => isFullBody(g.category)).length,
+    OTHER: wardrobe.filter((g) => !isTop(g.category) && !isBottom(g.category) && !isFullBody(g.category)).length,
+  }), [wardrobe]);
+
+  const filteredWardrobe = useMemo(() => {
+    if (filter === 'TOPS') return wardrobe.filter((g) => isTop(g.category));
+    if (filter === 'BOTTOMS') return wardrobe.filter((g) => isBottom(g.category));
+    if (filter === 'FULL') return wardrobe.filter((g) => isFullBody(g.category));
+    if (filter === 'OTHER') return wardrobe.filter((g) => !isTop(g.category) && !isBottom(g.category) && !isFullBody(g.category));
+    return wardrobe;
+  }, [wardrobe, filter]);
 
   async function pick() {
     if (!serverOk) { setBanner({ message: 'Connect to AI endpoint first', type: 'error' }); return; }
@@ -66,9 +92,32 @@ export default function WardrobeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
+      {/* Category Filter Chips */}
+      {wardrobe.length > 0 && (
+        <View style={s.filterContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipRow}>
+            {FILTERS.map((f) => {
+              const active = filter === f.key;
+              return (
+                <TouchableOpacity
+                  key={f.key}
+                  style={[s.chip, active && s.chipActive]}
+                  onPress={() => setFilter(f.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[s.chipTxt, active && s.chipTxtActive]}>
+                    {f.label} [{counts[f.key]}]
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Garments List */}
       <FlatList
-        data={wardrobe}
+        data={filteredWardrobe}
         keyExtractor={(i) => i.id}
         contentContainerStyle={{ paddingHorizontal: GAP.lg, paddingBottom: GAP.huge }}
         renderItem={({ item }) => (
@@ -82,13 +131,24 @@ export default function WardrobeScreen({ navigation }) {
           />
         )}
         ListEmptyComponent={
-          <View style={s.empty}>
-            <View style={s.emptyIconBox}>
-              <PixelIcon name="briefcase" size={40} color={COLORS.textDim} />
+          wardrobe.length === 0 ? (
+            <View style={s.empty}>
+              <View style={s.emptyIconBox}>
+                <PixelIcon name="briefcase" size={38} color={COLORS.textDim} />
+              </View>
+              <Text style={s.emptyTitle}>WARDROBE EMPTY</Text>
+              <Text style={s.emptyTxt}>Upload tops, bottoms, or dresses to generate styled looks</Text>
+              <TouchableOpacity style={s.emptyBtn} onPress={pick} activeOpacity={0.8}>
+                <PixelIcon name="plus" size={16} color="#0B0C10" />
+                <Text style={s.emptyBtnTxt}>UPLOAD FIRST GARMENT</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={s.emptyTitle}>WARDROBE EMPTY</Text>
-            <Text style={s.emptyTxt}>Upload tops, bottoms, or dresses to generate styled looks</Text>
-          </View>
+          ) : (
+            <View style={s.empty}>
+              <Text style={s.emptyTitle}>NO {filter} FOUND</Text>
+              <Text style={s.emptyTxt}>Switch category filter or upload new items</Text>
+            </View>
+          )
         }
       />
     </SafeAreaView>
@@ -127,7 +187,7 @@ const s = StyleSheet.create({
   addRow: {
     flexDirection: 'row',
     paddingHorizontal: GAP.lg,
-    paddingBottom: GAP.md,
+    paddingBottom: GAP.sm,
     gap: GAP.sm,
   },
   addBtn: {
@@ -149,9 +209,38 @@ const s = StyleSheet.create({
     fontSize: TYPE.sm,
   },
 
+  filterContainer: {
+    paddingBottom: GAP.md,
+  },
+  chipRow: {
+    paddingHorizontal: GAP.lg,
+    gap: GAP.xs,
+  },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RAD.xs,
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  chipActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.cardLight,
+  },
+  chipTxt: {
+    fontFamily: FONTS.pixel,
+    color: COLORS.textDim,
+    fontSize: 9,
+    letterSpacing: 0.8,
+  },
+  chipTxtActive: {
+    color: COLORS.primary,
+  },
+
   empty: {
     alignItems: 'center',
-    paddingTop: GAP.huge * 1.5,
+    paddingTop: GAP.huge,
     paddingHorizontal: GAP.xl,
   },
   emptyIconBox: {
@@ -177,5 +266,22 @@ const s = StyleSheet.create({
     fontSize: TYPE.xs,
     textAlign: 'center',
     marginTop: GAP.xs,
+    marginBottom: GAP.lg,
+  },
+  emptyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: GAP.lg,
+    paddingVertical: GAP.md,
+    borderRadius: RAD.xs,
+  },
+  emptyBtnTxt: {
+    fontFamily: FONTS.pixel,
+    color: '#0B0C10',
+    fontSize: TYPE.xs,
+    letterSpacing: 0.8,
   },
 });
+
