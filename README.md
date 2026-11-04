@@ -1,64 +1,104 @@
 # FitCheck
 
-FitCheck is a React Native mobile application for organizing your wardrobe and generating outfit recommendations.
-It is built with Expo.
+FitCheck is an Android wardrobe assistant and daily outfit recommendation app built with React Native and Expo.
+It pairs tops, bottoms, and layers from your own wardrobe using a fine-tuned vision-language model (Qwen3-VL 2B).
 
-<img width="1920" height="1080" alt="demo-ss" src="https://github.com/user-attachments/assets/a79deedb-1230-4669-9938-63c6c4e30b6b" />
+<p align="center">
+  <img src="assets/preview.jpg" alt="FitCheck App Interface" width="760" />
+</p>
 
-## Research paper
+<p align="center">
+  <a href="https://github.com/barryallen16/fitcheck/releases/tag/v2.0.1">
+    <img src="https://img.shields.io/badge/Release-v2.0.1-ff007f?style=flat-square&logo=android" alt="Latest Release" />
+  </a>
+  <a href="https://barryallen16.github.io/fitcheck-website/">
+    <img src="https://img.shields.io/badge/Web_Demo-Live-09318D?style=flat-square&logo=googlechrome&logoColor=white" alt="Live Web Demo" />
+  </a>
+  <a href="https://huggingface.co/spaces/barryallen16/fitcheck">
+    <img src="https://img.shields.io/badge/HuggingFace-Space_Endpoint-ffd21e?style=flat-square&logo=huggingface" alt="HF Space" />
+  </a>
+  <a href="https://ieeexplore.ieee.org/document/11681836/">
+    <img src="https://img.shields.io/badge/IEEE_Xplore-Paper_11681836-00629B?style=flat-square" alt="IEEE Paper" />
+  </a>
+</p>
 
-The architecture and dataset distillation methods behind FitCheck are published in IEEE:
+## Highlights
+
+* **Garment attribute extraction**: Takes photos of clothes and extracts category, formality, and color tags.
+* **Compatibility scoring**: Uses a fine-tuned Qwen3-VL 2B model to score outfit pairings with specific style reasoning.
+* **Daily outfit carousel**: Swipe horizontally through candidate outfits and tap Wear Today to record your pick.
+* **Weather-aware recommendations**: Pulls local weather conditions from Open-Meteo to weight temperature and rain suitability.
+* **7-day outfit calendar**: Logs worn outfits by date to prevent repeated combinations across the week.
+* **Offline-first storage**: Stores photos and wardrobe data locally on device, with full JSON backup import and export.
+* **Dual backend support**: Routes requests to a hosted Hugging Face Space by default, with local LM Studio fallback for offline inference.
+
+## Live demo and web showcase
+
+A desktop web showcase is live at [barryallen16.github.io/fitcheck-website](https://barryallen16.github.io/fitcheck-website/).
+It lets you test the stylist without installing the mobile app:
+
+* Interactive studio canvas with male and female wardrobe presets.
+* Live Task A attribute analysis and Task B compatibility scoring using the fine-tuned model API.
+* Real-time weather and temperature controls for outfit recommendations.
+* Direct APK download link for Android devices.
+
+## Research publication
+
+The dataset distillation methods, fine-tuning procedure, and evaluation results are published in IEEE:
 
 * IEEE Xplore: [IEEE Publication (Document 11681836)](https://ieeexplore.ieee.org/document/11681836/)
 * Open-access PDF: [fitcheck-journal-paper.pdf](https://jayadithya.is-a.dev/fitcheck-journal-paper.pdf)
 
-## Ecosystem and architecture
+## Ecosystem
 
-FitCheck consists of three interconnected repositories and hosted inference endpoints:
+FitCheck spans three repositories and two inference backends:
 
-* **FitCheck Mobile (`fitcheck-rn`)**:
-This repository contains the Expo React Native mobile client.
-It provides local wardrobe persistence, offline photo storage, and daily outfit generation for personal use.
-The interface uses Geist Pixel for titles, Geist Sans for body text, 24px pixel art icons, and a hot pink and sky blue color scheme.
+* **FitCheck Mobile (`fitcheck`)**:
+This repository contains the Expo React Native mobile application.
+It handles camera uploads, local database storage, swipe deck gestures, and daily logs.
+The interface uses Geist Pixel headers, Geist body typography, and custom retro pixel icons.
 
 * **FitCheck Web (`fitcheck-website`)**:
-The desktop web platform built with React, Vite, and Tailwind CSS.
-It offers a browser workspace for managing garments, inspecting VLM tags, and testing outfit recommendations on a computer.
-Both the web platform and the mobile app share the same backend model logic and Task A and Task B prompting pipelines.
+The desktop web application built with React, Vite, and Tailwind CSS.
+It runs the public showcase and browser demo, hosted on GitHub Pages.
 
 * **FitCheck Human Evaluation (`fitcheck-human-eval`)**:
-The Next.js web application built for the empirical research study published in IEEE.
-It served model-generated outfit combinations to human reviewers in blind test batches against baseline models.
-Reviewers scored recommendations on aesthetic pairing, color harmony, and contextual relevance.
-Those submissions saved to a Neon database and provided the validation data published in the research paper.
+The evaluation portal used for the empirical user study in the IEEE paper.
+It presented blind test batches of outfits to human reviewers to compare the fine-tuned model against baseline architectures.
 
-* **Cloud Inference API**:
-A hosted backend on Hugging Face Spaces at [barryallen16/fitcheck](https://huggingface.co/spaces/barryallen16/fitcheck), serving Task A attribute extraction and Task B outfit compatibility scoring.
+* **Cloud Inference Space**:
+Hosted inference backend on Hugging Face Spaces at [barryallen16/fitcheck](https://huggingface.co/spaces/barryallen16/fitcheck).
 
-* **Edge / Local Model**:
-Quantized [Qwen3-VL-2B-Instruct GGUF](https://huggingface.co/barryallen16/FitCheck-Qwen3-VL-Stylist-GGUF) for on-device or local network inference via LM Studio.
+* **Local Model Weights**:
+Quantized [Qwen3-VL-2B-Instruct GGUF](https://huggingface.co/barryallen16/FitCheck-Qwen3-VL-Stylist-GGUF) for running inference locally via LM Studio without internet access.
 
-* **Hugging Face Collection**:
-Training datasets, fine-tuned weights, and spaces are indexed in the [FitCheck collection](https://huggingface.co/collections/barryallen16/fitcheck).
+* **Model Collection**:
+Datasets, weights, and spaces are indexed in the [FitCheck collection on Hugging Face](https://huggingface.co/collections/barryallen16/fitcheck).
 
 ## How it works
 
-The app catalogs garment photos and tags attributes such as color, category, style, and occasion using vision-language models (Task A).
-Outfit generation combines these tags with real-time local weather fetched from Open-Meteo.
-The stylist model evaluates garment combinations and scores compatibility (Task B).
-Recommendations run against the hosted Hugging Face Space API by default.
-You can switch to a local LM Studio instance running on your machine whenever you want an offline or self-hosted setup.
-Wardrobe items, outfits, and image caches remain on your device using AsyncStorage and local filesystem storage.
+1. **Tagging (Task A)**:
+When you photograph a garment, the vision model analyzes the image.
+It assigns garment type, fabric texture, formality level, and color values.
+
+2. **Styling and scoring (Task B)**:
+The recommendation engine fetches local weather and filters candidate garments.
+The fine-tuned model evaluates top, bottom, and layer combinations, outputs a compatibility score, and writes a style rationale covering color harmony and silhouette balance.
+
+3. **Rotation and history**:
+When you select Wear Today, FitCheck marks the items as worn and logs the entry to your 7-day calendar.
+Unworn items receive higher ranking in future suggestions to maintain a balanced wardrobe rotation.
 
 ## Project structure
 
 ```text
-FitCheck/
+fitcheck/
 ├── App.js
 ├── app.json
 ├── package.json
 ├── assets/
-│   └── fonts/
+│   ├── fonts/
+│   └── preview.jpg
 └── src/
     ├── components/
     ├── config/
@@ -74,16 +114,17 @@ FitCheck/
 
 ### Prerequisites
 
-* Node.js (v18 or newer recommended) and npm.
-* Expo Go installed on an Android or iOS phone, or a configured Android/iOS simulator.
-* (Optional) LM Studio with the Qwen3-VL-2B GGUF model loaded if you prefer running inference locally.
+* Node.js (v18 or newer) and npm or Bun.
+* Expo Go installed on an Android device, or a configured Android emulator.
+* (Optional) LM Studio with Qwen3-VL-2B GGUF loaded if running inference locally.
 
 ### Installation
 
 Clone the repository and install dependencies:
 
 ```bash
-cd fitcheck-rn
+git clone https://github.com/barryallen16/fitcheck.git
+cd fitcheck
 npm install
 ```
 
@@ -95,34 +136,36 @@ Copy the example configuration file:
 cp src/config/example.keys.js src/config/keys.js
 ```
 
-Edit `src/config/keys.js` with your parameters:
+Edit `src/config/keys.js` to configure your endpoints:
 
-* `LMS_API_URL`: Optional remote OpenAI-compatible endpoint.
-Leave empty to use the default endpoints.
-* `LMS_KEYS`: API keys for your remote endpoint, if authentication is required.
-* `LMS_MODEL`: Model identifier expected by your remote endpoint.
+* `LMS_API_URL`: Optional OpenAI-compatible server URL.
+Leave empty to use the default cloud endpoint.
+* `LMS_KEYS`: API key for your custom server, if required.
+* `LMS_MODEL`: Custom model identifier string.
 
-`src/config/keys.js` is ignored by git to prevent committing secrets.
+`src/config/keys.js` is ignored by git to protect local keys.
 
-### Backend connection modes
+### Backend modes
 
-The mobile app supports two inference modes:
-
-1. **Default Cloud API**:
-The app defaults to `https://barryallen16-fitcheck.hf.space`.
-No local GPU or desktop server setup is needed for outfit recommendations.
+1. **Hosted Cloud Space (Default)**:
+The app sends inference requests to `https://barryallen16-fitcheck.hf.space`.
+No desktop setup or local GPU is required.
 
 2. **Local LM Studio**:
-Download the [Qwen3-VL-2B GGUF weights](https://huggingface.co/barryallen16/FitCheck-Qwen3-VL-Stylist-GGUF).
+Download the [Qwen3-VL-2B GGUF model](https://huggingface.co/barryallen16/FitCheck-Qwen3-VL-Stylist-GGUF).
 Start the local server in LM Studio on port `1234`.
-When testing on a physical phone via Expo Go, set the server URL in app settings to your computer's local network IP address (such as `http://192.168.1.x:1234`) instead of `localhost`.
+Set the server URL in app profile settings to your computer's local network IP address (for example `http://192.168.1.50:1234`).
 
-### Start the development server
+### Start development server
 
 ```bash
 npx expo start
 ```
 
-Press `a` to open in Android emulator, `i` to open in iOS simulator, or scan the terminal QR code with Expo Go.
+Press `a` to open on an Android emulator or connected device via USB.
+Scan the QR code with Expo Go to open on a physical phone.
 
-The app prompts for camera and photo gallery permissions to add garments, and location permissions to retrieve local weather data.
+### Prebuilt APK
+
+You can download the compiled Android release build directly from the [Releases page](https://github.com/barryallen16/fitcheck/releases/tag/v2.0.1).
+The APK supports `arm64-v8a` and `armeabi-v7a` architectures.
