@@ -8,8 +8,8 @@ It pairs tops, bottoms, and layers from your own wardrobe using a fine-tuned vis
 </p>
 
 <p align="center">
-  <a href="https://github.com/barryallen16/fitcheck/releases/tag/v2.0.1">
-    <img src="https://img.shields.io/badge/Release-v2.0.1-ff007f?style=flat-square&logo=android" alt="Latest Release" />
+  <a href="https://github.com/barryallen16/fitcheck/releases/tag/v2.1.0">
+    <img src="https://img.shields.io/badge/Release-v2.1.0-ff007f?style=flat-square&logo=android" alt="Latest Release" />
   </a>
   <a href="https://barryallen16.github.io/fitcheck-website/">
     <img src="https://img.shields.io/badge/Web_Demo-Live-09318D?style=flat-square&logo=googlechrome&logoColor=white" alt="Live Web Demo" />
@@ -167,5 +167,5 @@ Scan the QR code with Expo Go to open on a physical phone.
 
 ### Prebuilt APK
 
-You can download the compiled Android release build directly from the [Releases page](https://github.com/barryallen16/fitcheck/releases/tag/v2.0.1).
+You can download the compiled Android release build directly from the [Releases page](https://github.com/barryallen16/fitcheck/releases/tag/v2.1.0).
 The APK supports `arm64-v8a` and `armeabi-v7a` architectures.
